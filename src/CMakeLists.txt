@@ -1,7 +1,6 @@
 set(CMAKE_BUILD_TYPE Debug)
 
 set(LIB_SOURCES
-  bloom.c
   cpu.c
   instruction/jmp.c
   instruction/nop.c
@@ -13,18 +12,21 @@ set(MAIN_SOURCES
   main.c
 )
 
-set(HEADERS
+set(LIB_HEADERS
   ${CONFIG_HEADER}
-  bloom.h
   cpu.h
   instruction/jmp.h
   instruction/nop.h
-  loader.h
 )
 
-add_library(bloom STATIC ${LIB_SOURCES} ${HEADERS})
+set(MAIN_HEADERS
+	${LIB_HEADERS}
+  	loader.h
+)
 
-add_executable(main ${HEADERS} ${MAIN_SOURCES})
+add_library(bloom STATIC ${LIB_SOURCES} ${LIB_HEADERS})
+
+add_executable(main ${MAIN_HEADERS} ${MAIN_SOURCES})
 target_link_libraries(main bloom)
 
 install(TARGETS bloom
