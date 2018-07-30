@@ -47,7 +47,7 @@ uint8_t cpu_start(BloomCPU* cpu) {
 		}
 	}
 
-	printf("\nAborting cpu processing ($pc = %i, mem_size = %i)...\n", cpu->pc, cpu->size);
+	printf("\nAborting cpu processing ($pc = 0x%04X, mem_size = %i)...\n", cpu->pc, cpu->size);
 	return 0;
 }
 
