@@ -32,8 +32,9 @@ typedef struct BloomCPU {
 } BloomCPU;
 
 BloomCPU* cpu_create();
-int       cpu_initialize_rom(BloomCPU*, void* rom_memory, size_t len, uint16_t pc);
-int       cpu_start(BloomCPU*);
+uint8_t   cpu_initialize_rom(BloomCPU*, void* rom_memory, size_t len, uint16_t pc);
+uint8_t   cpu_start(BloomCPU*);
+uint8_t   cpu_step(BloomCPU*);
 void      cpu_destroy(BloomCPU*);
 
 #endif
