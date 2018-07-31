@@ -37,5 +37,8 @@ uint8_t   cpu_start(BloomCPU*);
 uint8_t   cpu_step(BloomCPU*);
 void      cpu_destroy(BloomCPU*);
 
+/* helpers */
+uint16_t cpu_mem_get_addr(BloomCPU* cpu, uint16_t offset);
+
 #endif
 

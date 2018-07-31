@@ -1,6 +1,4 @@
 #include "cpu.h"
-#include "instruction/nop.h"
-#include "instruction/jmp.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -31,6 +29,10 @@ BloomCPU* cpu_create() {
 	return cpu;
 }
 
+uint16_t cpu_mem_get_addr(BloomCPU* cpu, uint16_t offset) {
+	return *((uint16_t*) (cpu->memory + cpu->pc + offset));
+}
+
 uint8_t cpu_initialize_rom(BloomCPU* cpu, void* rom_memory, size_t len, uint16_t pc) {
 	cpu->memory = rom_memory;
 	cpu->pc = pc;
@@ -52,17 +54,25 @@ uint8_t cpu_start(BloomCPU* cpu) {
 }
 
 uint8_t cpu_step(BloomCPU* cpu) {
-	uint8_t opcode = cpu->memory[cpu->pc];
+	uint8_t *opcode = &cpu->memory[cpu->pc];
 	uint8_t result;
-	switch(opcode) {
-		case 0x00: result = inst_nop(cpu); break;
-		case 0xC3: result = inst_jmp(cpu); break;
+	switch(*opcode) {
+		case 0x00: 
+			cpu->pc++;
+			break;
+		case 0xC3:
+			cpu->pc = (opcode[2] << 8) | opcode[1];
+			break;
+		case 0x31:
+			cpu->sp = (opcode[2] << 8) | opcode[1];
+			cpu->pc++;
+			break;
 		default:
-			_unsupported_opcode(cpu, opcode);
-			result = 1;
+			_unsupported_opcode(cpu, *opcode);
+			return 1;
 	}
 
-	return result;
+	return 0;
 }
 
 void cpu_destroy(BloomCPU* cpu) {

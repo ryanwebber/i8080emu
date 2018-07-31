@@ -51,6 +51,23 @@ START_TEST(test_bloom_inst_jmp)
 }
 END_TEST
 
+START_TEST(test_bloom_inst_lxi_sp)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[4] = {
+		0x31, 0xFF, 0xFE, 0x66
+	};
+	
+	cpu_initialize_rom(cpu, rom, 24, 0);
+	
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->sp, 0xFEFF);
+	
+	cpu_destroy(cpu);
+}
+END_TEST
+
 Suite* bloom_suite(void){
     Suite *s;
     TCase *tc_core;
@@ -66,8 +83,9 @@ Suite* bloom_suite(void){
 
     /* Instructions test case */
     tc_instr = tcase_create("Instructions");
-    tcase_add_test(tc_instr, test_bloom_inst_nop);
     tcase_add_test(tc_instr, test_bloom_inst_jmp);
+    tcase_add_test(tc_instr, test_bloom_inst_lxi_sp);
+    tcase_add_test(tc_instr, test_bloom_inst_nop);
 	suite_add_tcase(s, tc_instr);
 
     return s;

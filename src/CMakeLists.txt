@@ -2,8 +2,6 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(LIB_SOURCES
   cpu.c
-  instruction/jmp.c
-  instruction/nop.c
 )
 
 set(MAIN_SOURCES
@@ -15,8 +13,6 @@ set(MAIN_SOURCES
 set(LIB_HEADERS
   ${CONFIG_HEADER}
   cpu.h
-  instruction/jmp.h
-  instruction/nop.h
 )
 
 set(MAIN_HEADERS
