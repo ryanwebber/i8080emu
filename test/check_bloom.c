@@ -221,21 +221,39 @@ START_TEST(test_bloom_inst_dcx_d)
 	};
 	
 	cpu_initialize_rom(cpu, rom, 4, 0);
-	uint8_t reg[2] = {
-		0x32, 0x10
-	};
 
-	cpu->d = reg[0];
-	cpu->e = reg[1];
+	cpu->d = 0x32;
+	cpu->e = 0x10;
 
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
-	ck_assert_uint_eq(cpu->d, reg[0] - 1);
-	ck_assert_uint_eq(cpu->e, reg[1]);
+	ck_assert_uint_eq(cpu->d, 0x32);
+	ck_assert_uint_eq(cpu->e, 0x0F);
 	
 	cpu_destroy(cpu);
 }
 END_TEST
+
+START_TEST(test_bloom_inst_inx_h)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[1] = {
+		0x23
+	};
+	cpu->h = 0x55;
+	cpu->l = 0x66;
+	
+	cpu_initialize_rom(cpu, rom, 4, 0);
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->h, 0x55);
+	ck_assert_uint_eq(cpu->l, 0x65);
+	
+	cpu_destroy(cpu);
+}
+END_TEST
+
 
 Suite* bloom_suite(void){
     Suite *s;
@@ -255,6 +273,7 @@ Suite* bloom_suite(void){
     tcase_add_test(tc_instr, test_bloom_inst_call);
     tcase_add_test(tc_instr, test_bloom_inst_dcx_d);
     tcase_add_test(tc_instr, test_bloom_inst_inr_h);
+    tcase_add_test(tc_instr, test_bloom_inst_inx_h);
     tcase_add_test(tc_instr, test_bloom_inst_jmp);
     tcase_add_test(tc_instr, test_bloom_inst_ldax_d);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_d);
