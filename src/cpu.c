@@ -105,6 +105,16 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->h++;
 			cpu->pc++;
 			break;
+		case 0x31: //lxi sp
+			_debug_instruction(cpu, "LXI SP", 2);
+			cpu->sp = (opcode[2] << 8) | opcode[1];
+			cpu->pc++;
+			break;
+		case 0x77: // mov m,a
+			_debug_instruction(cpu, "MOV M<-A", 0);
+			cpu->memory[cpu->h << 8 | cpu->l] = cpu->a;
+			cpu->pc++;
+			break;
 		case 0xc3: // jmp
 			_debug_instruction(cpu, "JMP", 2);
 			cpu->pc = (opcode[2] << 8) | opcode[1];
@@ -113,11 +123,6 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "CALL", 2);
 			_push(cpu, cpu->memory + cpu->pc + 1, 2);
 			cpu->pc = (opcode[2] << 8 | opcode[1]);
-			break;
-		case 0x31: //lxi sp
-			_debug_instruction(cpu, "LXI SP", 2);
-			cpu->sp = (opcode[2] << 8) | opcode[1];
-			cpu->pc++;
 			break;
 		default:
 			_unsupported_opcode(cpu, *opcode);

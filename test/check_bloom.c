@@ -149,6 +149,27 @@ START_TEST(test_bloom_inst_mvi_b)
 }
 END_TEST
 
+START_TEST(test_bloom_inst_mov_m_a)
+{
+	uint8_t *rom = malloc(sizeof(uint8_t) * 2);
+	BloomCPU *cpu = cpu_create();
+	rom[0] = 0x77;
+	rom[1] = 0x0;
+	
+	cpu_initialize_rom(cpu, rom, 8, 0);
+	cpu->h = 0x0;
+	cpu->l = 0x1;
+	cpu->a = 0x98;
+	
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(rom[1], 0x98);
+	
+	cpu_destroy(cpu);
+	free(rom);
+}
+END_TEST
+
 START_TEST(test_bloom_inst_ldax_d)
 {
 	BloomCPU *cpu = cpu_create();
@@ -240,6 +261,7 @@ Suite* bloom_suite(void){
     tcase_add_test(tc_instr, test_bloom_inst_lxi_h);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_sp);
     tcase_add_test(tc_instr, test_bloom_inst_mvi_b);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_m_a);
     tcase_add_test(tc_instr, test_bloom_inst_nop);
     tcase_add_test(tc_instr, test_bloom_inst_rim);
 	
