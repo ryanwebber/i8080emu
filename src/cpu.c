@@ -64,15 +64,39 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "NOP", 0);
 			cpu->pc++;
 			break;
+		case 0x05: //DCR B
+			_debug_instruction(cpu, "DCR B", 0);
+			cpu->b -= 1;
+			cpu->pc++;
+			break;
 		case 0x06: // MVI B
 			_debug_instruction(cpu, "MVI B", 1);
 			cpu->b = opcode[1];
+			cpu->pc++;
+			break;
+		case 0x0d: //DCR C
+			_debug_instruction(cpu, "DCR C", 0);
+			cpu->c -= 1;
 			cpu->pc++;
 			break;
 		case 0x11: // lxi d
 			_debug_instruction(cpu, "LXI D", 2);
 			cpu->d = opcode[1];
 			cpu->e = opcode[2];
+			cpu->pc++;
+			break;
+		case 0x13: // inx d
+			_debug_instruction(cpu, "INX D", 0);
+			{
+				uint16_t num = (cpu->d << 8 | cpu->e) + 1;
+				cpu->d = (num & 0xFF00) >> 8;
+				cpu->e = num & 0x0FF;
+				cpu->pc++;
+			}
+			break;
+		case 0x15: //DCR D
+			_debug_instruction(cpu, "DCR D", 0);
+			cpu->d -= 1;
 			cpu->pc++;
 			break;
 		case 0x1a: // ldax d
@@ -103,7 +127,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 		case 0x23: // inx h
 			_debug_instruction(cpu, "INX H", 0);
 			{
-				uint16_t num = (cpu->h << 8 | cpu->l) - 1;
+				uint16_t num = (cpu->h << 8 | cpu->l) + 1;
 				cpu->h = (num & 0xFF00) >> 8;
 				cpu->l = num & 0x0FF;
 				cpu->pc++;
