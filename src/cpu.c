@@ -64,9 +64,9 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "NOP", 0);
 			cpu->pc++;
 			break;
-		case 0x06: // MVI D |8|
-			_debug_instruction(cpu, "MVI D |8|", 1);
-			cpu->h = opcode[1];
+		case 0x06: // MVI B
+			_debug_instruction(cpu, "MVI B", 1);
+			cpu->b = opcode[1];
 			cpu->pc++;
 			break;
 		case 0x11: // lxi d
@@ -83,8 +83,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 		case 0x1b: // dcx d
 			_debug_instruction(cpu, "DCX D", 0);
 			{
-				uint16_t num = (cpu->e << 8 | cpu->d);
-				num--;
+				uint16_t num = (cpu->e << 8 | cpu->d) - 1;
 				cpu->d = num & 0x00FF;
 				cpu->e = (num & 0xFF00) >> 8;
 				cpu->pc++;

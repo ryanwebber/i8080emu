@@ -1,3 +1,4 @@
+# cmake
 CMakeCache.txt
 CMakeFiles
 CMakeScripts
@@ -8,4 +9,9 @@ install_manifest.txt
 compile_commands.json
 CTestTestfile.cmake
 
-config.h
+# supporting files
+/config.h
+
+# editor
+*.swp
+

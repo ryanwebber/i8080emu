@@ -132,7 +132,7 @@ START_TEST(test_bloom_inst_inr_h)
 }
 END_TEST
 
-START_TEST(test_bloom_inst_mvi_h)
+START_TEST(test_bloom_inst_mvi_b)
 {
 	BloomCPU *cpu = cpu_create();
 	uint8_t rom[4] = {
@@ -143,7 +143,7 @@ START_TEST(test_bloom_inst_mvi_h)
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
-	ck_assert_uint_eq(cpu->h, 0x55);
+	ck_assert_uint_eq(cpu->b, 0x55);
 	
 	cpu_destroy(cpu);
 }
@@ -239,7 +239,7 @@ Suite* bloom_suite(void){
     tcase_add_test(tc_instr, test_bloom_inst_lxi_d);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_h);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_sp);
-    tcase_add_test(tc_instr, test_bloom_inst_mvi_h);
+    tcase_add_test(tc_instr, test_bloom_inst_mvi_b);
     tcase_add_test(tc_instr, test_bloom_inst_nop);
     tcase_add_test(tc_instr, test_bloom_inst_rim);
 	
