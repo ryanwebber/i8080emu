@@ -75,7 +75,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->e = opcode[2];
 			cpu->pc++;
 			break;
-		case 0x1B: // dcx d
+		case 0x1a: // ldax d
+			_debug_instruction(cpu, "LDAX D", 0);
+			cpu->a = cpu->memory[(cpu->e << 8 | cpu -> d)];
+			cpu->pc++;
+			break;
+		case 0x1b: // dcx d
 			_debug_instruction(cpu, "DCX D", 0);
 			{
 				uint16_t num = (cpu->e << 8 | cpu->d);
@@ -85,12 +90,23 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc++;
 			}
 			break;
+		case 0x20: // rim
+			_debug_instruction(cpu, "RIM", 0);
+			/* Serial instruction, ignore */
+			cpu->pc++;
+			break;
+		case 0x21: // lxi h
+			_debug_instruction(cpu, "LXI H", 2);
+			cpu->h = opcode[1];
+			cpu->l = opcode[2];
+			cpu->pc++;
+			break;
 		case 0x24: // inr h
 			_debug_instruction(cpu, "INR H", 0);
 			cpu->h++;
 			cpu->pc++;
 			break;
-		case 0xC3: // jmp
+		case 0xc3: // jmp
 			_debug_instruction(cpu, "JMP", 2);
 			cpu->pc = (opcode[2] << 8) | opcode[1];
 			break;
@@ -130,7 +146,7 @@ void _debug_instruction(BloomCPU* cpu, const char* inst, uint8_t argc) {
 }
 
 void _push(BloomCPU* cpu, uint8_t *addr, uint16_t len) {
-	memcpy(cpu->memory + cpu->sp, addr, len);
-	cpu->sp += len;
+	memcpy(cpu->memory + cpu->sp - len + 1, addr, len);
+	cpu->sp -= len;
 }
 

@@ -28,6 +28,23 @@ START_TEST(test_bloom_inst_nop)
 }
 END_TEST
 
+START_TEST(test_bloom_inst_rim)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[1] = {
+		0x20
+	};
+	
+	cpu_initialize_rom(cpu, rom, 8, 0);
+	
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->pc, 1);
+	
+	cpu_destroy(cpu);
+}
+END_TEST
+
 START_TEST(test_bloom_inst_jmp)
 {
 	BloomCPU *cpu = cpu_create();
@@ -80,6 +97,24 @@ START_TEST(test_bloom_inst_lxi_d)
 }
 END_TEST
 
+START_TEST(test_bloom_inst_lxi_h)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[3] = {
+		0x21, 0xFF, 0xFE
+	};
+	
+	cpu_initialize_rom(cpu, rom, 16, 0);
+	
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->h, 0xFF);
+	ck_assert_uint_eq(cpu->l, 0xFE);
+	
+	cpu_destroy(cpu);
+}
+END_TEST
+
 START_TEST(test_bloom_inst_inr_h)
 {
 	BloomCPU *cpu = cpu_create();
@@ -114,6 +149,25 @@ START_TEST(test_bloom_inst_mvi_h)
 }
 END_TEST
 
+START_TEST(test_bloom_inst_ldax_d)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[2] = {
+		0x1a, 0x55
+	};
+	
+	cpu_initialize_rom(cpu, rom, 8, 0);
+	cpu->d = 0x01;
+	cpu->e = 0x00;
+	
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->a, 0x55);
+	
+	cpu_destroy(cpu);
+}
+END_TEST
+
 START_TEST(test_bloom_inst_call)
 {
 	BloomCPU *cpu = cpu_create();
@@ -125,11 +179,11 @@ START_TEST(test_bloom_inst_call)
 	rom[4] = 0x00;
 	
 	cpu_initialize_rom(cpu, rom, 60, 0);
-	cpu->sp = 3;
+	cpu->sp = 4;
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
-	ck_assert_uint_eq(cpu->sp, 0x5);
+	ck_assert_uint_eq(cpu->sp, 0x2);
 	ck_assert_uint_eq(cpu->memory[3], 0xFE);
 	ck_assert_uint_eq(cpu->memory[4], 0x55);
 	
@@ -176,14 +230,19 @@ Suite* bloom_suite(void){
 
     /* Instructions test case */
     tc_instr = tcase_create("Instructions");
+
     tcase_add_test(tc_instr, test_bloom_inst_call);
     tcase_add_test(tc_instr, test_bloom_inst_dcx_d);
     tcase_add_test(tc_instr, test_bloom_inst_inr_h);
     tcase_add_test(tc_instr, test_bloom_inst_jmp);
+    tcase_add_test(tc_instr, test_bloom_inst_ldax_d);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_d);
+    tcase_add_test(tc_instr, test_bloom_inst_lxi_h);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_sp);
     tcase_add_test(tc_instr, test_bloom_inst_mvi_h);
     tcase_add_test(tc_instr, test_bloom_inst_nop);
+    tcase_add_test(tc_instr, test_bloom_inst_rim);
+	
 	suite_add_tcase(s, tc_instr);
 
     return s;
