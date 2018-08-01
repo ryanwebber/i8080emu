@@ -9,9 +9,20 @@ void _unsupported_opcode(BloomCPU*, uint8_t);
 void _debug_instruction(BloomCPU*, const char*, uint8_t);
 void _push(BloomCPU*, uint8_t*, uint16_t);
 
+ConditionCodes* cc_create() {
+	ConditionCodes* cc = malloc(sizeof(ConditionCodes));
+	cc->z = 0;
+
+	return cc;
+}
+
+void cc_destroy(ConditionCodes *cc) {
+	free(cc);
+}
+
 BloomCPU* cpu_create() {
 	
-	ConditionCodes* cc = malloc(sizeof(ConditionCodes));
+	ConditionCodes *cc = cc_create();
 	
 	BloomCPU* cpu = malloc(sizeof(BloomCPU));
 	cpu->interruptions_allowed = 1;
@@ -148,6 +159,14 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->memory[cpu->h << 8 | cpu->l] = cpu->a;
 			cpu->pc++;
 			break;
+		case 0xc2: // jnz
+			_debug_instruction(cpu, "JNZ", 2);
+			if (cpu->cc->z == 0) {
+				cpu->pc = (opcode[2] << 8) | opcode[1];
+			} else {
+				cpu->pc++;
+			}
+			break;
 		case 0xc3: // jmp
 			_debug_instruction(cpu, "JMP", 2);
 			cpu->pc = (opcode[2] << 8) | opcode[1];
@@ -166,7 +185,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 }
 
 void cpu_destroy(BloomCPU* cpu) {
-	free(cpu->cc);
+	cc_destroy(cpu->cc);
 	free(cpu);
 }
 

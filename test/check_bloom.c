@@ -18,7 +18,7 @@ START_TEST(test_bloom_inst_nop)
 		0x00
 	};
 	
-	cpu_initialize_rom(cpu, rom, 8, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -35,7 +35,7 @@ START_TEST(test_bloom_inst_rim)
 		0x20
 	};
 	
-	cpu_initialize_rom(cpu, rom, 8, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -52,7 +52,7 @@ START_TEST(test_bloom_inst_jmp)
 		0xC3, 0xFF, 0xFE, 0x66
 	};
 	
-	cpu_initialize_rom(cpu, rom, 24, 0);
+	cpu_initialize_rom(cpu, rom, 4, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -69,7 +69,7 @@ START_TEST(test_bloom_inst_lxi_sp)
 		0x31, 0xFF, 0xFE, 0x66
 	};
 	
-	cpu_initialize_rom(cpu, rom, 24, 0);
+	cpu_initialize_rom(cpu, rom, 4, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -86,7 +86,7 @@ START_TEST(test_bloom_inst_lxi_d)
 		0x11, 0xFF, 0xFE
 	};
 	
-	cpu_initialize_rom(cpu, rom, 16, 0);
+	cpu_initialize_rom(cpu, rom, 3, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -104,7 +104,7 @@ START_TEST(test_bloom_inst_lxi_h)
 		0x21, 0xFF, 0xFE
 	};
 	
-	cpu_initialize_rom(cpu, rom, 16, 0);
+	cpu_initialize_rom(cpu, rom, 3, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -118,11 +118,11 @@ END_TEST
 START_TEST(test_bloom_inst_inr_h)
 {
 	BloomCPU *cpu = cpu_create();
-	uint8_t rom[4] = {
+	uint8_t rom[1] = {
 		0x24
 	};
 	
-	cpu_initialize_rom(cpu, rom, 24, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -135,11 +135,11 @@ END_TEST
 START_TEST(test_bloom_inst_mvi_b)
 {
 	BloomCPU *cpu = cpu_create();
-	uint8_t rom[4] = {
+	uint8_t rom[2] = {
 		0x06, 0x55
 	};
 	
-	cpu_initialize_rom(cpu, rom, 24, 0);
+	cpu_initialize_rom(cpu, rom, 2, 0);
 	
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
@@ -156,7 +156,7 @@ START_TEST(test_bloom_inst_mov_m_a)
 	rom[0] = 0x77;
 	rom[1] = 0x0;
 	
-	cpu_initialize_rom(cpu, rom, 8, 0);
+	cpu_initialize_rom(cpu, rom, 2, 0);
 	cpu->h = 0x0;
 	cpu->l = 0x1;
 	cpu->a = 0x98;
@@ -177,7 +177,7 @@ START_TEST(test_bloom_inst_ldax_d)
 		0x1a, 0x55
 	};
 	
-	cpu_initialize_rom(cpu, rom, 8, 0);
+	cpu_initialize_rom(cpu, rom, 2, 0);
 	cpu->d = 0x01;
 	cpu->e = 0x00;
 	
@@ -192,14 +192,14 @@ END_TEST
 START_TEST(test_bloom_inst_call)
 {
 	BloomCPU *cpu = cpu_create();
-	uint8_t *rom = malloc(sizeof(uint8_t));
+	uint8_t *rom = malloc(sizeof(uint8_t) * 5);
 	rom[0] = 0xcd;
 	rom[1] = 0xfe;
 	rom[2] = 0x55;
 	rom[3] = 0x00;
 	rom[4] = 0x00;
 	
-	cpu_initialize_rom(cpu, rom, 60, 0);
+	cpu_initialize_rom(cpu, rom, 5, 0);
 	cpu->sp = 4;
 	
 	uint8_t result = cpu_step(cpu);
@@ -220,7 +220,7 @@ START_TEST(test_bloom_inst_dcx_d)
 		0x1B
 	};
 	
-	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	cpu->d = 0x32;
 	cpu->e = 0x10;
 
@@ -240,7 +240,7 @@ START_TEST(test_bloom_inst_inx_h)
 		0x23
 	};
 	
-	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	cpu->h = 0x55;
 	cpu->l = 0x66;
 
@@ -260,7 +260,7 @@ START_TEST(test_bloom_inst_inx_d)
 		0x23
 	};
 	
-	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	cpu->d = 0x55;
 	cpu->e = 0x66;
 
@@ -280,7 +280,7 @@ START_TEST(test_bloom_inst_dcr_b)
 		0x05
 	};
 	
-	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	cpu->b = 0x99;
 
 	uint8_t result = cpu_step(cpu);
@@ -298,7 +298,7 @@ START_TEST(test_bloom_inst_dcr_c)
 		0x0d
 	};
 	
-	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	cpu->c = 0x99;
 
 	uint8_t result = cpu_step(cpu);
@@ -316,12 +316,35 @@ START_TEST(test_bloom_inst_dcr_d)
 		0x15
 	};
 	
-	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu_initialize_rom(cpu, rom, 1, 0);
 	cpu->d = 0x99;
 
 	uint8_t result = cpu_step(cpu);
 	ck_assert_uint_eq(result, 0);
 	ck_assert_uint_eq(cpu->d, 0x98);
+	
+	cpu_destroy(cpu);
+}
+END_TEST
+
+START_TEST(test_bloom_inst_jnz)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[4] = {
+		0xC2, 0xC2, 0xFE, 0xFF
+	};
+	
+	cpu_initialize_rom(cpu, rom, 4, 0);
+	cpu->cc->z = 1;
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->pc, 1);
+
+	cpu->cc->z = 0;
+	result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->pc, 0xFFFE);
 	
 	cpu_destroy(cpu);
 }
@@ -351,6 +374,7 @@ Suite* bloom_suite(void){
     tcase_add_test(tc_instr, test_bloom_inst_inr_h);
     tcase_add_test(tc_instr, test_bloom_inst_inx_h);
     tcase_add_test(tc_instr, test_bloom_inst_jmp);
+    tcase_add_test(tc_instr, test_bloom_inst_jnz);
     tcase_add_test(tc_instr, test_bloom_inst_ldax_d);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_d);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_h);
