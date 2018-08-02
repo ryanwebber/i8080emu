@@ -8,10 +8,13 @@ uint8_t _step(BloomCPU*);
 void _unsupported_opcode(BloomCPU*, uint8_t);
 void _debug_instruction(BloomCPU*, const char*, uint8_t);
 void _push(BloomCPU*, uint8_t*, uint16_t);
+uint8_t* _pop(BloomCPU*, uint8_t);
 
 ConditionCodes* cc_create() {
 	ConditionCodes* cc = malloc(sizeof(ConditionCodes));
 	cc->z = 0;
+	cc->s = 0;
+	cc->p = 0;
 
 	return cc;
 }
@@ -79,22 +82,24 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "DCR B", 0);
 			cpu->b -= 1;
 			cpu->pc++;
+			_update_flags(cpu, cpu->b);
 			break;
 		case 0x06: // MVI B
 			_debug_instruction(cpu, "MVI B", 1);
 			cpu->b = opcode[1];
-			cpu->pc++;
+			cpu->pc += 2;
 			break;
 		case 0x0d: //DCR C
 			_debug_instruction(cpu, "DCR C", 0);
 			cpu->c -= 1;
 			cpu->pc++;
+			_update_flags(cpu, cpu->c);
 			break;
 		case 0x11: // lxi d
 			_debug_instruction(cpu, "LXI D", 2);
 			cpu->d = opcode[1];
 			cpu->e = opcode[2];
-			cpu->pc++;
+			cpu->pc += 3;
 			break;
 		case 0x13: // inx d
 			_debug_instruction(cpu, "INX D", 0);
@@ -109,10 +114,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "DCR D", 0);
 			cpu->d -= 1;
 			cpu->pc++;
+			_update_flags(cpu, cpu->d);
 			break;
 		case 0x1a: // ldax d
 			_debug_instruction(cpu, "LDAX D", 0);
-			cpu->a = cpu->memory[(cpu->e << 8 | cpu -> d)];
+			cpu->a = cpu->memory[(cpu->d << 8 | cpu -> e)];
 			cpu->pc++;
 			break;
 		case 0x1b: // dcx d
@@ -133,7 +139,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "LXI H", 2);
 			cpu->h = opcode[1];
 			cpu->l = opcode[2];
-			cpu->pc++;
+			cpu->pc += 3;
 			break;
 		case 0x23: // inx h
 			_debug_instruction(cpu, "INX H", 0);
@@ -148,11 +154,17 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "INR H", 0);
 			cpu->h++;
 			cpu->pc++;
+			_update_flags(cpu, cpu->h);
 			break;
 		case 0x31: //lxi sp
 			_debug_instruction(cpu, "LXI SP", 2);
 			cpu->sp = (opcode[2] << 8) | opcode[1];
-			cpu->pc++;
+			cpu->pc += 3;
+			break;
+		case 0x32: // sta
+			_debug_instruction(cpu, "STA", 2);
+			cpu->memory[opcode[2] << 8 | opcode[1]] = cpu->a;
+			cpu->pc += 3;
 			break;
 		case 0x77: // mov m,a
 			_debug_instruction(cpu, "MOV M<-A", 0);
@@ -176,6 +188,13 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_push(cpu, cpu->memory + cpu->pc + 1, 2);
 			cpu->pc = (opcode[2] << 8 | opcode[1]);
 			break;
+		case 0xc9: // ret
+			_debug_instruction(cpu, "RET", 0);
+			{
+				uint8_t *addr = _pop(cpu, 2);
+				cpu->pc = (addr[1] << 8 | addr[0]);
+			}
+			break;
 		default:
 			_unsupported_opcode(cpu, *opcode);
 			return 1;
@@ -194,15 +213,40 @@ void _unsupported_opcode(BloomCPU* cpu, uint8_t opcode) {
 }
 
 void _debug_instruction(BloomCPU* cpu, const char* inst, uint8_t argc) {
-	printf("0x%04X %-16s ; ", cpu->pc, inst);
+	printf("0x%04X 0x%02X %-16s ; ", cpu->pc, cpu->memory[cpu->pc], inst);
 	for (uint8_t i = 0; i < argc; i++) {
 		printf("0x%02X ", cpu->memory[cpu->pc + i + 1]);
 	}
 	printf("\n");
 }
 
+uint8_t _parity(uint8_t val) {
+	uint8_t c = 0;
+	for(uint8_t i = 0; i < sizeof(val) * 8; i++) {
+		c += (val >> i) & 0x01;
+	}
+	return c % 2 == 0;
+}
+
+void _update_flags(BloomCPU* cpu, uint8_t val) {
+	// zero flag
+	cpu->cc->z = (val == 0);
+	
+	// sign flag
+	cpu->cc->s = (val & 0x80) == 0x80;
+	
+	// parity flag
+	cpu->cc->p = _parity(val);
+}
+
 void _push(BloomCPU* cpu, uint8_t *addr, uint16_t len) {
-	memcpy(cpu->memory + cpu->sp - len + 1, addr, len);
 	cpu->sp -= len;
+	memcpy(cpu->memory + cpu->sp, addr, len);
+}
+
+uint8_t* _pop(BloomCPU* cpu, uint8_t len) {
+	uint8_t *addr = cpu->memory + cpu->sp;
+	cpu->sp += len;
+	return addr;
 }
 

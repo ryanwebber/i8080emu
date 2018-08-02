@@ -5,12 +5,11 @@
 #include <stdint.h>
 
 typedef struct ConditionCodes {
-    uint8_t z:1;
-	//uint8_t s:1;
-	//uint8_t p:1;
-	//uint8_t cy:1;
-	//uint8_t ac:1;
-	//uint8_t pad:3;
+    uint8_t z;
+	uint8_t s;
+	uint8_t p;
+	//uint8_t cy;
+	//uint8_t ac;
 } ConditionCodes;
 
 typedef struct BloomCPU {
@@ -39,6 +38,9 @@ void      cpu_destroy(BloomCPU*);
 
 /* helpers */
 uint16_t cpu_mem_get_addr(BloomCPU* cpu, uint16_t offset);
+
+/* visible for testing */
+void _update_flags(BloomCPU* cpu, uint8_t val);
 
 #endif
 
