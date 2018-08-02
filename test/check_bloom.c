@@ -245,6 +245,100 @@ START_TEST(test_bloom_inst_ret)
 }
 END_TEST
 
+START_TEST(test_bloom_inst_mov_e_b)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[1] = {
+		0x58
+	};
+	
+	cpu_initialize_rom(cpu, rom, 1, 0);
+	cpu->b = 0x99;
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->e, 0x99);
+
+	cpu_destroy(cpu);
+}
+END_TEST
+
+START_TEST(test_bloom_inst_mov_e_m)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[2] = {
+		0x5e, 0x77
+	};
+	
+	cpu_initialize_rom(cpu, rom, 2, 0);
+	cpu->h = 0x00;
+	cpu->l = 0x01;
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->e, 0x77);
+
+	cpu_destroy(cpu);
+}
+END_TEST
+
+START_TEST(test_bloom_inst_mov_a_m)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[2] = {
+		0x7e, 0x77
+	};
+	
+	cpu_initialize_rom(cpu, rom, 2, 0);
+	cpu->h = 0x00;
+	cpu->l = 0x01;
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->a, 0x77);
+
+	cpu_destroy(cpu);
+}
+END_TEST
+
+START_TEST(test_bloom_inst_mov_c_m)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[2] = {
+		0x4e, 0x77
+	};
+	
+	cpu_initialize_rom(cpu, rom, 2, 0);
+	cpu->h = 0x00;
+	cpu->l = 0x01;
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->c, 0x77);
+
+	cpu_destroy(cpu);
+}
+END_TEST
+
+START_TEST(test_bloom_inst_mov_d_m)
+{
+	BloomCPU *cpu = cpu_create();
+	uint8_t rom[2] = {
+		0x56, 0x77
+	};
+	
+	cpu_initialize_rom(cpu, rom, 2, 0);
+	cpu->h = 0x00;
+	cpu->l = 0x01;
+
+	uint8_t result = cpu_step(cpu);
+	ck_assert_uint_eq(result, 0);
+	ck_assert_uint_eq(cpu->d, 0x77);
+
+	cpu_destroy(cpu);
+}
+END_TEST
+
 START_TEST(test_bloom_inst_call)
 {
 	BloomCPU *cpu = cpu_create();
@@ -458,6 +552,12 @@ Suite* bloom_suite(void){
     tcase_add_test(tc_instr, test_bloom_inst_lxi_h);
     tcase_add_test(tc_instr, test_bloom_inst_lxi_sp);
     tcase_add_test(tc_instr, test_bloom_inst_mvi_b);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_a_m);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_c_m);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_d_m);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_d_m);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_e_b);
+    tcase_add_test(tc_instr, test_bloom_inst_mov_e_m);
     tcase_add_test(tc_instr, test_bloom_inst_mov_m_a);
     tcase_add_test(tc_instr, test_bloom_inst_nop);
     tcase_add_test(tc_instr, test_bloom_inst_ret);

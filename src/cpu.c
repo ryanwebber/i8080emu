@@ -5,10 +5,16 @@
 #include <string.h>
 
 uint8_t _step(BloomCPU*);
+
 void _unsupported_opcode(BloomCPU*, uint8_t);
 void _debug_instruction(BloomCPU*, const char*, uint8_t);
+
 void _push(BloomCPU*, uint8_t*, uint16_t);
 uint8_t* _pop(BloomCPU*, uint8_t);
+
+uint8_t _read_hl(BloomCPU*);
+uint8_t _read_de(BloomCPU*);
+void _write_hl(BloomCPU*, uint8_t);
 
 ConditionCodes* cc_create() {
 	ConditionCodes* cc = malloc(sizeof(ConditionCodes));
@@ -118,7 +124,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x1a: // ldax d
 			_debug_instruction(cpu, "LDAX D", 0);
-			cpu->a = cpu->memory[(cpu->d << 8 | cpu -> e)];
+			cpu->a = _read_de(cpu);
 			cpu->pc++;
 			break;
 		case 0x1b: // dcx d
@@ -166,9 +172,34 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->memory[opcode[2] << 8 | opcode[1]] = cpu->a;
 			cpu->pc += 3;
 			break;
+		case 0x4e: // mov c,m
+			_debug_instruction(cpu, "MOV A<-M", 0);
+			cpu->c = _read_hl(cpu);
+			cpu->pc++;
+			break;
+		case 0x56: // mov d,m
+			_debug_instruction(cpu, "MOV D<-M", 0);
+			cpu->d = _read_hl(cpu);
+			cpu->pc++;
+			break;
+		case 0x58: // mov e,b
+			_debug_instruction(cpu, "MOV E<-B", 0);
+			cpu->e = cpu->b;
+			cpu->pc++;
+			break;
+		case 0x5e: // mov e,m
+			_debug_instruction(cpu, "MOV E<-M", 0);
+			cpu->e = _read_hl(cpu);
+			cpu->pc++;
+			break;
 		case 0x77: // mov m,a
 			_debug_instruction(cpu, "MOV M<-A", 0);
-			cpu->memory[cpu->h << 8 | cpu->l] = cpu->a;
+			_write_hl(cpu, cpu->a);
+			cpu->pc++;
+			break;
+		case 0x7e: // mov a,m
+			_debug_instruction(cpu, "MOV A<-M", 0);
+			cpu->a = _read_hl(cpu);
 			cpu->pc++;
 			break;
 		case 0xc2: // jnz
@@ -248,5 +279,17 @@ uint8_t* _pop(BloomCPU* cpu, uint8_t len) {
 	uint8_t *addr = cpu->memory + cpu->sp;
 	cpu->sp += len;
 	return addr;
+}
+
+uint8_t _read_hl(BloomCPU* cpu) {
+	return cpu->memory[cpu->h << 8 | cpu->l];
+}
+
+uint8_t _read_de(BloomCPU* cpu) {
+	return cpu->memory[cpu->d << 8 | cpu->e];
+}
+
+void _write_hl(BloomCPU* cpu, uint8_t val) {
+	cpu->memory[cpu->h << 8 | cpu->l] = val;
 }
 
