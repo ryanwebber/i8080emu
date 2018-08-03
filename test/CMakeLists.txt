@@ -12,9 +12,9 @@ include_directories(${CHECK_INCLUDE_DIRS})
 link_directories(${CHECK_LIBRARY_DIRS})
 
 set(TEST_SOURCES
-  check_bloom.c
+  run_tests.c
 )
 
-add_executable(check_bloom ${TEST_SOURCES})
-target_link_libraries(check_bloom bloom ${CHECK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+add_executable(run_tests ${TEST_SOURCES})
+target_link_libraries(run_tests bloom ${CHECK_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 

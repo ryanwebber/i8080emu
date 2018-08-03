@@ -16,6 +16,8 @@ uint8_t _read_hl(BloomCPU*);
 uint8_t _read_de(BloomCPU*);
 void _write_hl(BloomCPU*, uint8_t);
 
+int i = 0;
+
 ConditionCodes* cc_create() {
 	ConditionCodes* cc = malloc(sizeof(ConditionCodes));
 	cc->z = 0;
@@ -72,7 +74,7 @@ uint8_t cpu_start(BloomCPU* cpu) {
 		}
 	}
 
-	printf("\nAborting cpu processing ($pc = 0x%04X, mem_size = %i)...\n", cpu->pc, cpu->size);
+	printf("\nAborting cpu processing ($pc = 0x%04X, mem_size = %i, cycles = %i)...\n", cpu->pc, cpu->size, i);
 	return 0;
 }
 
@@ -231,6 +233,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			return 1;
 	}
 
+	i++;
 	return 0;
 }
 
