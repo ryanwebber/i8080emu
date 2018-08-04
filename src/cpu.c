@@ -86,18 +86,18 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "NOP", 0);
 			cpu->pc++;
 			break;
-		case 0x05: //DCR B
+		case 0x05: // dcr b
 			_debug_instruction(cpu, "DCR B", 0);
 			cpu->b -= 1;
 			cpu->pc++;
 			_update_flags(cpu, cpu->b);
 			break;
-		case 0x06: // MVI B
+		case 0x06: // mvi b
 			_debug_instruction(cpu, "MVI B", 1);
 			cpu->b = opcode[1];
 			cpu->pc += 2;
 			break;
-		case 0x0d: //DCR C
+		case 0x0d: // dcr c
 			_debug_instruction(cpu, "DCR C", 0);
 			cpu->c -= 1;
 			cpu->pc++;
@@ -105,8 +105,8 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x11: // lxi d
 			_debug_instruction(cpu, "LXI D", 2);
-			cpu->d = opcode[1];
-			cpu->e = opcode[2];
+			cpu->d = opcode[2];
+			cpu->e = opcode[1];
 			cpu->pc += 3;
 			break;
 		case 0x13: // inx d
@@ -118,7 +118,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc++;
 			}
 			break;
-		case 0x15: //DCR D
+		case 0x15: // dcr d
 			_debug_instruction(cpu, "DCR D", 0);
 			cpu->d -= 1;
 			cpu->pc++;
