@@ -4,13 +4,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-typedef struct ConditionCodes {
+typedef struct ConditionFlags {
     uint8_t z;
 	uint8_t s;
 	uint8_t p;
 	//uint8_t cy;
 	//uint8_t ac;
-} ConditionCodes;
+} ConditionFlags;
 
 typedef struct BloomCPU {
 	uint8_t interruptions_allowed;
@@ -18,7 +18,7 @@ typedef struct BloomCPU {
 	uint16_t pc;
 	uint8_t *memory;
 	uint16_t size;
-	struct ConditionCodes *cc;
+	struct ConditionFlags *flags;
 
 	/* registers */
 	uint8_t a;

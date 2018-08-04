@@ -18,22 +18,22 @@ void _write_hl(BloomCPU*, uint8_t);
 
 int i = 0;
 
-ConditionCodes* cc_create() {
-	ConditionCodes* cc = malloc(sizeof(ConditionCodes));
-	cc->z = 0;
-	cc->s = 0;
-	cc->p = 0;
+ConditionFlags* cf_create() {
+	ConditionFlags* cf = malloc(sizeof(ConditionFlags));
+	cf->z = 0;
+	cf->s = 0;
+	cf->p = 0;
 
-	return cc;
+	return cf;
 }
 
-void cc_destroy(ConditionCodes *cc) {
-	free(cc);
+void cf_destroy(ConditionFlags *cf) {
+	free(cf);
 }
 
 BloomCPU* cpu_create() {
 	
-	ConditionCodes *cc = cc_create();
+	ConditionFlags *cf = cf_create();
 	
 	BloomCPU* cpu = malloc(sizeof(BloomCPU));
 	cpu->interruptions_allowed = 1;
@@ -41,7 +41,7 @@ BloomCPU* cpu_create() {
 	cpu->pc = 0;
 	cpu->memory = NULL;
 	cpu->size = 0;
-	cpu->cc = cc;
+	cpu->flags = cf;
 
 	cpu->a = 0;
 	cpu->b = 0;
@@ -206,7 +206,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0xc2: // jnz
 			_debug_instruction(cpu, "JNZ", 2);
-			if (cpu->cc->z == 0) {
+			if (cpu->flags->z == 0) {
 				cpu->pc = (opcode[2] << 8) | opcode[1];
 			} else {
 				cpu->pc++;
@@ -238,7 +238,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 }
 
 void cpu_destroy(BloomCPU* cpu) {
-	cc_destroy(cpu->cc);
+	cf_destroy(cpu->flags);
 	free(cpu);
 }
 
@@ -264,13 +264,13 @@ uint8_t _parity(uint8_t val) {
 
 void _update_flags(BloomCPU* cpu, uint8_t val) {
 	// zero flag
-	cpu->cc->z = (val == 0);
+	cpu->flags->z = (val == 0);
 	
 	// sign flag
-	cpu->cc->s = (val & 0x80) == 0x80;
+	cpu->flags->s = (val & 0x80) == 0x80;
 	
 	// parity flag
-	cpu->cc->p = _parity(val);
+	cpu->flags->p = _parity(val);
 }
 
 void _push(BloomCPU* cpu, uint8_t *addr, uint16_t len) {
