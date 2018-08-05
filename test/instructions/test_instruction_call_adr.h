@@ -16,8 +16,9 @@ extern uint8_t test_instruction_call_adr(uint8_t opcode, BloomCPU *cpu) {
 	uint8_t result = cpu_step(cpu);
 	assert_uint_eq(0, result);
 	assert_uint_eq(0x3, cpu->sp);
-	assert_uint_eq(0xFE, cpu->memory[3]);
-	assert_uint_eq(0x55, cpu->memory[4]);
+	assert_uint_eq(0x03, cpu->memory[3]);
+	assert_uint_eq(0x00, cpu->memory[4]);
+	assert_uint_eq(0x55FE, cpu->pc);
 
 	free(rom);
 	return 0;

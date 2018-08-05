@@ -145,8 +145,8 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x21: // lxi h
 			_debug_instruction(cpu, "LXI H", 2);
-			cpu->h = opcode[1];
-			cpu->l = opcode[2];
+			cpu->h = opcode[2];
+			cpu->l = opcode[1];
 			cpu->pc += 3;
 			break;
 		case 0x23: // inx h
@@ -209,7 +209,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			if (cpu->flags->z == 0) {
 				cpu->pc = (opcode[2] << 8) | opcode[1];
 			} else {
-				cpu->pc++;
+				cpu->pc += 3;
 			}
 			break;
 		case 0xc3: // jmp
@@ -218,8 +218,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0xcd: // call
 			_debug_instruction(cpu, "CALL", 2);
-			_push(cpu, cpu->memory + cpu->pc + 1, 2);
-			cpu->pc = (opcode[2] << 8 | opcode[1]);
+			{
+				uint16_t addr = cpu->pc + 3;
+				_push(cpu, (uint8_t*) &addr, 2);
+				cpu->pc = (opcode[2] << 8 | opcode[1]);
+			}
 			break;
 		case 0xc9: // ret
 			_debug_instruction(cpu, "RET", 0);
@@ -247,7 +250,7 @@ void _unsupported_opcode(BloomCPU* cpu, uint8_t opcode) {
 }
 
 void _debug_instruction(BloomCPU* cpu, const char* inst, uint8_t argc) {
-	printf("0x%04X 0x%02X %-16s ; ", cpu->pc, cpu->memory[cpu->pc], inst);
+	printf("[0x%04X]    0x%02X %-16s ; ", cpu->pc, cpu->memory[cpu->pc], inst);
 	for (uint8_t i = 0; i < argc; i++) {
 		printf("0x%02X ", cpu->memory[cpu->pc + i + 1]);
 	}

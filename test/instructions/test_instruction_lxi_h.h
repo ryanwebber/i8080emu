@@ -11,8 +11,8 @@ extern uint8_t test_instruction_lxi_h(uint8_t opcode, BloomCPU *cpu) {
 
 	uint8_t result = cpu_step(cpu);
 	assert_uint_eq(0, result);
-	assert_uint_eq(0xFF, cpu->h);
-	assert_uint_eq(0xFE, cpu->l);
+	assert_uint_eq(0xFE, cpu->h);
+	assert_uint_eq(0xFF, cpu->l);
 
 	return 0;
 }
