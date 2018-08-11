@@ -2,6 +2,8 @@
 #include "../src/cpu.h"
 #include "../src/loader.h"
 
+#include <string.h>
+
 State8080 *make_clean(uint8_t *memory, uint16_t len) {
 	ConditionCodes cc;
 	
@@ -157,8 +159,12 @@ int main(int argc, char *argv[]) {
 		printf("Loaded rom '%s' (%i bytes)\n", argv[1], size);
 	}
 
+	/* Clone the address space for the testing executable */
+	uint8_t *test_data = malloc(size);
+	memcpy(test_data, rom_data, size);
+
 	State8080* clean_state = make_clean(rom_data, size);
-	BloomCPU* testing_state = make_testing(rom_data, size);
+	BloomCPU* testing_state = make_testing(test_data, size);
 
 	uint32_t instruction_count = 0;
 
@@ -178,13 +184,9 @@ int main(int argc, char *argv[]) {
 
 	destroy_clean(clean_state);
 	destroy_testing(testing_state);
-
 	
-	/* 
-	 * This throws an error for some reason, but not in valgrind 
-	 * Since we're about to exit anyway don't bother freeing
-	 */
-	// free(rom_data);
+	free(rom_data);
+	free(test_data);
 
 	return 1;
 }
