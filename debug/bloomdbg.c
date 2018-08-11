@@ -28,8 +28,9 @@ void destroy_clean(State8080 *cpu) {
 	free(cpu);
 }
 
-void step_clean(State8080 *cpu) {
+uint8_t step_clean(State8080 *cpu) {
 	Emulate8080Op(cpu);
+	return 0;
 }
 
 BloomCPU *make_testing(uint8_t *memory, uint16_t len) {
@@ -42,8 +43,8 @@ void destroy_testing(BloomCPU *cpu) {
 	cpu_destroy(cpu);
 }
 
-void step_testing(BloomCPU* cpu) {
-	cpu_step(cpu);
+uint8_t step_testing(BloomCPU* cpu) {
+	return cpu_step(cpu);
 }
 
 void print_states(State8080 *cs, BloomCPU *ts) {
@@ -173,10 +174,13 @@ int main(int argc, char *argv[]) {
 		uint8_t instruction = clean_state->memory[clean_state->pc];
 		uint16_t pc = clean_state->pc;
 		printf("[0x%04X] 0x%02X Stepping...\n", pc, instruction);
-		step_clean(clean_state);
-		step_testing(testing_state);
+		uint8_t result = step_clean(clean_state);
+		result = result | step_testing(testing_state);
 
-		if (assert_state_equal(clean_state, testing_state, instruction)) {
+		if (result) {
+			printf("\nError stepping cpu state. Exiting...\n");
+			break;
+		} else if (assert_state_equal(clean_state, testing_state, instruction)) {
 			printf("\n State's diverged after %u instructions. Exiting...\n", instruction_count);
 			break;
 		}

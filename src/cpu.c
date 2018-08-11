@@ -14,7 +14,7 @@ uint8_t* _pop(BloomCPU*, uint8_t);
 
 uint8_t _read_hl(BloomCPU*);
 uint8_t _read_de(BloomCPU*);
-void _write_mem(BloomCPU*, uint8_t);
+uint8_t _write_mem(BloomCPU*, uint8_t);
 
 int i = 0;
 
@@ -196,8 +196,8 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x77: // mov m,a
 			_debug_instruction(cpu, "MOV M<-A", 0);
-			_write_mem(cpu, cpu->a);
 			cpu->pc++;
+			result = _write_mem(cpu, cpu->a);
 			break;
 		case 0x7e: // mov a,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
@@ -233,11 +233,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		default:
 			_unsupported_opcode(cpu, *opcode);
-			return 1;
+			result = 1;
 	}
 
 	i++;
-	return 0;
+	return result;
 }
 
 void cpu_destroy(BloomCPU* cpu) {
@@ -295,12 +295,15 @@ uint8_t _read_de(BloomCPU* cpu) {
 	return cpu->memory[cpu->d << 8 | cpu->e];
 }
 
-void _write_mem(BloomCPU* cpu, uint8_t val) {
+uint8_t _write_mem(BloomCPU* cpu, uint8_t val) {
 	uint16_t offset = cpu->h << 8 | cpu->l;
-	if (offset >= cpu->size) {
+	if (offset >= cpu->size || offset < 0x2000) {
+		printf("\nInvalid memory write: 0x%02X -> memory[0x%04X]\n", val, offset);
 		printf("ERROR - detected invalid write address. Aborting...\n");
-		exit(1);
+		return 1;
 	}
+
 	cpu->memory[offset] = val;
+	return 0;
 }
 
