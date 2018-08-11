@@ -39,9 +39,11 @@ BloomCPU* cpu_create() {
 	cpu->interruptions_allowed = 1;
 	cpu->sp = 0;
 	cpu->pc = 0;
-	cpu->memory = NULL;
-	cpu->size = 0;
 	cpu->flags = cf;
+	
+	cpu->memory = NULL;
+	cpu->mem_hi = 0;
+	cpu->mem_lo = 0;
 
 	cpu->a = 0;
 	cpu->b = 0;
@@ -61,20 +63,35 @@ uint16_t cpu_mem_get_addr(BloomCPU* cpu, uint16_t offset) {
 uint8_t cpu_initialize_rom(BloomCPU* cpu, void* rom_memory, size_t len, uint16_t pc) {
 	cpu->memory = rom_memory;
 	cpu->pc = pc;
-	cpu->size = len;
+
+	/* Create a non-writable address space */
+	cpu->mem_lo = 0x00;
+	cpu->mem_hi = 0x00;
+	
+	return 0;
+}
+
+uint8_t cpu_initialize_rwm(BloomCPU *cpu, void* rom_memory, uint16_t mem_lo, uint16_t mem_hi, uint16_t pc) {
+	cpu->memory = rom_memory;
+	cpu->pc = pc;
+
+	/* Create a partially-writable address space */
+	cpu->mem_lo = mem_lo;
+	cpu->mem_hi = mem_hi;
+	
 	return 0;
 }
 
 uint8_t cpu_start(BloomCPU* cpu) {
 	uint8_t result;
-	while (cpu->pc < cpu->size) {
+	while (1) {
 		result = cpu_step(cpu);
 		if (result) {
 			break;
 		}
 	}
 
-	printf("\nAborting cpu processing ($pc = 0x%04X, mem_size = %i, cycles = %i)...\n", cpu->pc, cpu->size, i);
+	printf("\nAborting cpu processing ($pc = 0x%04X, cycles = %i)...\n", cpu->pc, i);
 	return 0;
 }
 
@@ -173,6 +190,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "STA", 2);
 			cpu->memory[opcode[2] << 8 | opcode[1]] = cpu->a;
 			cpu->pc += 3;
+			break;
+		case 0x36: // mvi m
+			_debug_instruction(cpu, "MVI M", 1);
+			cpu->pc += 2;
+			result = _write_mem(cpu, opcode[1]);
 			break;
 		case 0x4e: // mov c,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
@@ -297,7 +319,7 @@ uint8_t _read_de(BloomCPU* cpu) {
 
 uint8_t _write_mem(BloomCPU* cpu, uint8_t val) {
 	uint16_t offset = cpu->h << 8 | cpu->l;
-	if (offset >= cpu->size || offset < 0x2000) {
+	if (offset >= cpu->mem_hi || offset < cpu->mem_lo) {
 		printf("\nInvalid memory write: 0x%02X -> memory[0x%04X]\n", val, offset);
 		printf("ERROR - detected invalid write address. Aborting...\n");
 		return 1;

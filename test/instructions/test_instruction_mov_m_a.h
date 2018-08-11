@@ -7,7 +7,7 @@ extern uint8_t test_instruction_mov_m_a(uint8_t opcode, BloomCPU *cpu) {
 	rom[0] = opcode;
 	rom[1] = 0x0;
 
-	cpu_initialize_rom(cpu, rom, 2, 0);
+	cpu_initialize_rwm(cpu, rom, 1, 2, 0);
 	cpu->h = 0x00;
 	cpu->l = 0x01;
 	cpu->a = 0x98;

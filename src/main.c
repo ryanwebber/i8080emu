@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
 	uint8_t *rom_data;
 	uint32_t size = load(argv[1], &rom_data);
-	if (rom_data == NULL) {
+	if (rom_data == NULL && size != 0x4000) {
 		printf("Unable to load the file: %s", argv[1]);
 		exit(1);
 	} else {
@@ -24,7 +24,8 @@ int main(int argc, char *argv[]) {
 
 	BloomCPU* cpu = cpu_create();
 
-	if (cpu_initialize_rom(cpu, rom_data, size, 0)) {
+	/* writable memory starts at 0x2000 */
+	if (cpu_initialize_rwm(cpu, rom_data, 0x2000, 0x4000, 0)) {
 		return 1;
 	}
 

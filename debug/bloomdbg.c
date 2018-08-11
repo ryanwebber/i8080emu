@@ -35,7 +35,7 @@ uint8_t step_clean(State8080 *cpu) {
 
 BloomCPU *make_testing(uint8_t *memory, uint16_t len) {
 	BloomCPU* cpu = cpu_create();
-	cpu_initialize_rom(cpu, memory, len, 0);
+	cpu_initialize_rwm(cpu, memory, 0x2000, 0x4000, 0x0);
 	return cpu;
 }
 
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
 
 	uint8_t *rom_data;
 	uint32_t size = load(argv[1], &rom_data);
-	if (rom_data == NULL) {
+	if (rom_data == NULL || size != 0x4000) {
 		printf("Unable to load the file: %s", argv[1]);
 		exit(1);
 	} else {

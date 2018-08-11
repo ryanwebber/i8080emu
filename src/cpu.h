@@ -16,9 +16,12 @@ typedef struct BloomCPU {
 	uint8_t interruptions_allowed;
 	uint16_t sp;
 	uint16_t pc;
-	uint8_t *memory;
-	uint16_t size;
 	struct ConditionFlags *flags;
+
+	/* Memory management */
+	uint8_t *memory;
+	uint16_t mem_lo;
+	uint16_t mem_hi;
 
 	/* registers */
 	uint8_t a;
@@ -32,6 +35,7 @@ typedef struct BloomCPU {
 
 BloomCPU* cpu_create();
 uint8_t   cpu_initialize_rom(BloomCPU*, void* rom_memory, size_t len, uint16_t pc);
+uint8_t   cpu_initialize_rwm(BloomCPU*, void* rom_memory, uint16_t mem_lo, uint16_t mem_hi, uint16_t pc);
 uint8_t   cpu_start(BloomCPU*);
 uint8_t   cpu_step(BloomCPU*);
 void      cpu_destroy(BloomCPU*);
