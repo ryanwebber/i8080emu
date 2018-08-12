@@ -23,6 +23,7 @@ ConditionFlags* cf_create() {
 	cf->z = 0;
 	cf->s = 0;
 	cf->p = 0;
+	cf->c = 0;
 
 	return cf;
 }
@@ -97,7 +98,7 @@ uint8_t cpu_start(BloomCPU* cpu) {
 
 uint8_t cpu_step(BloomCPU* cpu) {
 	uint8_t *opcode = &cpu->memory[cpu->pc];
-	uint8_t result;
+	uint8_t result = 0;
 	switch(*opcode) {
 		case 0x00: // nop 
 			_debug_instruction(cpu, "NOP", 0);
@@ -119,6 +120,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->c -= 1;
 			cpu->pc++;
 			_update_flags(cpu, cpu->c);
+			break;
+		case 0x0e: //mvi c
+			_debug_instruction(cpu, "MVI C", 1);
+			cpu->c = opcode[1];
+			cpu->pc += 2;
 			break;
 		case 0x11: // lxi d
 			_debug_instruction(cpu, "LXI D", 2);
@@ -181,6 +187,21 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->pc++;
 			_update_flags(cpu, cpu->h);
 			break;
+		case 0x26: // mvi h
+			_debug_instruction(cpu, "MVI_H", 1);
+			cpu->h = opcode[1];
+			cpu->pc += 2;
+			break;
+		case 0x29: // dad h
+			_debug_instruction(cpu, "DAD H", 0);
+			{
+				uint16_t num = (cpu->h << 8 | cpu->l);
+				cpu->h = ((num << 1) & 0xFF00) >> 8;
+				cpu->l = num << 1 & 0x00FF;
+				cpu->flags->c = ((num >> 15) & 0x01) == 0x01;
+				cpu->pc++;
+			}
+			break;
 		case 0x31: //lxi sp
 			_debug_instruction(cpu, "LXI SP", 2);
 			cpu->sp = (opcode[2] << 8) | opcode[1];
@@ -216,10 +237,20 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->e = _read_hl(cpu);
 			cpu->pc++;
 			break;
+		case 0x6f: // mov l,a
+			_debug_instruction(cpu, "MOV L<-A", 0);
+			cpu->l = cpu->a;
+			cpu->pc++;
+			break;
 		case 0x77: // mov m,a
 			_debug_instruction(cpu, "MOV M<-A", 0);
 			cpu->pc++;
 			result = _write_mem(cpu, cpu->a);
+			break;
+		case 0x7C: // mov a,h
+			_debug_instruction(cpu, "MOV A<-H", 0);
+			cpu->a = cpu->h;
+			cpu->pc++;
 			break;
 		case 0x7e: // mov a,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
@@ -252,6 +283,24 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				uint8_t *addr = _pop(cpu, 2);
 				cpu->pc = (addr[1] << 8 | addr[0]);
 			}
+			break;
+		case 0xd5: // push d 
+			_debug_instruction(cpu, "PUSH D", 0);
+			_push(cpu, &cpu->d, 1);
+			_push(cpu, &cpu->e, 1);
+			cpu->pc++;
+			break;
+		case 0xe5: // push h
+			_debug_instruction(cpu, "PUSH H", 0);
+			_push(cpu, &cpu->h, 1);
+			_push(cpu, &cpu->l, 1);
+			cpu->pc++;
+			break;
+		case 0xfe: // cpi
+			_debug_instruction(cpu, "CPI", 1);
+			_update_flags(cpu, cpu->a - opcode[1]);
+			cpu->flags->c = opcode[1] > cpu->a;
+			cpu->pc += 2;
 			break;
 		default:
 			_unsupported_opcode(cpu, *opcode);

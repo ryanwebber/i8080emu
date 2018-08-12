@@ -8,7 +8,7 @@ typedef struct ConditionFlags {
     uint8_t z;
 	uint8_t s;
 	uint8_t p;
-	//uint8_t cy;
+	uint8_t c;
 	//uint8_t ac;
 } ConditionFlags;
 

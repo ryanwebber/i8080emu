@@ -548,7 +548,7 @@ int main(void) {
 				passed++;
 			}
 			fprintf(stderr, "\033[0m");
-			fprintf(stderr, "Running test 'test_instruction_%s'\n", tests[i]->name);
+			fprintf(stderr, "Running test 0x%02X ('test_instruction_%s')\n", i, tests[i]->name);
 		}
 	}
 
@@ -557,7 +557,7 @@ int main(void) {
 	} else {
 		fprintf(stderr, "\033[0;32m");
 	}
-	fprintf(stderr, "\n[%i / %i] Tests Passed (%i Total)\n", passed, passed + failures, NUM_TESTS);
+	fprintf(stderr, "\n[%i / %i] Tests Passed (%i Failed)\n", passed, passed + failures, failures);
 	fprintf(stderr, "\033[0m");
 
 	return (failures > 0);
