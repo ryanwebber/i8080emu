@@ -13,7 +13,7 @@ typedef struct ConditionFlags {
 } ConditionFlags;
 
 typedef struct BloomCPU {
-	uint8_t interruptions_allowed;
+	uint8_t int_enabled;
 	uint16_t sp;
 	uint16_t pc;
 	struct ConditionFlags *flags;

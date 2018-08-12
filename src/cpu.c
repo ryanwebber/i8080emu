@@ -37,7 +37,7 @@ BloomCPU* cpu_create() {
 	ConditionFlags *cf = cf_create();
 	
 	BloomCPU* cpu = malloc(sizeof(BloomCPU));
-	cpu->interruptions_allowed = 1;
+	cpu->int_enabled = 1;
 	cpu->sp = 0;
 	cpu->pc = 0;
 	cpu->flags = cf;
@@ -249,6 +249,16 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->pc += 2;
 			result = _write_mem(cpu, opcode[1]);
 			break;
+		case 0x3a: // lda
+			_debug_instruction(cpu, "LDA", 2);
+			cpu->a = _read_mem(cpu, opcode[2], opcode[1])[0];
+			cpu->pc += 3;
+			break;
+		case 0x3e: // mvi a
+			_debug_instruction(cpu, "MVI A", 1);
+			cpu->a = opcode[1];
+			cpu->pc += 2;
+			break;
 		case 0x4e: // mov c,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
 			cpu->c = _read_mem(cpu, cpu->h, cpu->l)[0];
@@ -288,7 +298,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->a = cpu->d;
 			cpu->pc++;
 			break;
-		case 0x7C: // mov a,h
+		case 0x7b: // mov a,e
+			_debug_instruction(cpu, "MOV A<-E", 0);
+			cpu->a = cpu->e;
+			cpu->pc++;
+			break;
+		case 0x7c: // mov a,h
 			_debug_instruction(cpu, "MOV A<-H", 0);
 			cpu->a = cpu->h;
 			cpu->pc++;
@@ -296,6 +311,19 @@ uint8_t cpu_step(BloomCPU* cpu) {
 		case 0x7e: // mov a,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
 			cpu->a = _read_mem(cpu, cpu->h, cpu->l)[0];
+			cpu->pc++;
+			break;
+		case 0xa7: // ana a
+			_debug_instruction(cpu, "ANA A", 0);
+			cpu->flags->c = 0;
+			cpu->pc++;
+			_update_flags(cpu, cpu->a);
+			break;
+		case 0xaf: // xra a
+			_debug_instruction(cpu, "XRA A", 0);
+			cpu->a = 0;
+			cpu->flags->c = 0;
+			_update_flags(cpu, cpu->a);
 			cpu->pc++;
 			break;
 		case 0xc1: // pop b
@@ -324,6 +352,16 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_push(cpu, &cpu->b, 1);
 			_push(cpu, &cpu->c, 1);
 			cpu->pc++;
+			break;
+		case 0xc6: // adi
+			_debug_instruction(cpu, "ADI", 1);
+			{
+				uint16_t val = cpu->a + opcode[1];
+				cpu->a = val & 0xFF;
+				cpu->flags->c = val > 0xFF;
+				cpu->pc += 2;
+				_update_flags(cpu, cpu->a);
+			}
 			break;
 		case 0xcd: // call
 			_debug_instruction(cpu, "CALL", 2);
@@ -393,6 +431,20 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc++;
 			}
 			break;
+		case 0xf1: // pop psw
+			_debug_instruction(cpu, "POP PSW", 0);
+			{
+				uint8_t flags = _pop(cpu, 1)[0];
+				uint8_t val = _pop(cpu, 1)[0];
+				cpu->flags->z = (flags & 0x01) > 0;
+				cpu->flags->s = (flags & 0x02) > 0;
+				cpu->flags->p = (flags & 0x04) > 0;
+				cpu->flags->c = (flags & 0x08) > 0;
+				cpu->flags->a = (flags & 0x10) > 0;
+				cpu->a = val;
+				cpu->pc++;
+			}
+			break;
 		case 0xf5: // push psw
 			_debug_instruction(cpu, "PUSH PSW", 0);
 			{
@@ -406,6 +458,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				_push(cpu, &flags, 1);
 				cpu->pc++;
 			}
+			break;
+		case 0xfb: // ei
+			_debug_instruction(cpu, "EI", 0);
+			cpu->int_enabled = 1;
+			cpu->pc++;
 			break;
 		case 0xfe: // cpi
 			_debug_instruction(cpu, "CPI", 1);
