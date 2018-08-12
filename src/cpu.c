@@ -104,6 +104,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "NOP", 0);
 			cpu->pc++;
 			break;
+		case 0x01: // lxi b
+			_debug_instruction(cpu, "LXI B", 2);
+			cpu->b = opcode[2];
+			cpu->c = opcode[1];
+			cpu->pc += 3;
+			break;
 		case 0x05: // dcr b
 			_debug_instruction(cpu, "DCR B", 0);
 			cpu->b -= 1;
@@ -114,6 +120,16 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "MVI B", 1);
 			cpu->b = opcode[1];
 			cpu->pc += 2;
+			break;
+		case 0x09: // dad b
+			_debug_instruction(cpu, "DAD B", 0);
+			{
+				uint32_t num = (cpu->b << 8 | cpu->c) + (cpu->h << 8 | cpu -> l);
+				cpu->h = (num & 0x0000FF00) >> 8;
+				cpu->l = (num & 0x000000FF);
+				cpu->flags->c = num > 0x0000FFFF;
+				cpu->pc++;
+			}
 			break;
 		case 0x0d: // dcr c
 			_debug_instruction(cpu, "DCR C", 0);
@@ -146,6 +162,16 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->d -= 1;
 			cpu->pc++;
 			_update_flags(cpu, cpu->d);
+			break;
+		case 0x19: // dad d
+			_debug_instruction(cpu, "DAD D", 0);
+			{
+				uint32_t num = (cpu->d << 8 | cpu->e) + (cpu->h << 8 | cpu -> l);
+				cpu->h = (num & 0x0000FF00) >> 8;
+				cpu->l = (num & 0x000000FF);
+				cpu->flags->c = num > 0x0000FFFF;
+				cpu->pc++;
+			}
 			break;
 		case 0x1a: // ldax d
 			_debug_instruction(cpu, "LDAX D", 0);
@@ -257,6 +283,15 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->a = _read_hl(cpu);
 			cpu->pc++;
 			break;
+		case 0xc1: // pop b
+			_debug_instruction(cpu, "POP B", 0);
+			{
+				uint8_t *addr = _pop(cpu, 2);
+				cpu->b = addr[1];
+				cpu->c = addr[0];
+				cpu->pc++;
+			}
+			break;
 		case 0xc2: // jnz
 			_debug_instruction(cpu, "JNZ", 2);
 			if (cpu->flags->z == 0) {
@@ -268,6 +303,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 		case 0xc3: // jmp
 			_debug_instruction(cpu, "JMP", 2);
 			cpu->pc = (opcode[2] << 8) | opcode[1];
+			break;
+		case 0xc5: // push b
+			_debug_instruction(cpu, "PUSH B", 0);
+			_push(cpu, &cpu->b, 1);
+			_push(cpu, &cpu->c, 1);
+			cpu->pc++;
 			break;
 		case 0xcd: // call
 			_debug_instruction(cpu, "CALL", 2);
@@ -284,17 +325,51 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc = (addr[1] << 8 | addr[0]);
 			}
 			break;
+		case 0xd1: // pop d
+			_debug_instruction(cpu, "POP D", 0);
+			{
+				uint8_t *addr = _pop(cpu, 2);
+				cpu->d = addr[1];
+				cpu->e = addr[0];
+				cpu->pc++;
+			}
+			break;
+		case 0xd3: // out
+			_debug_instruction(cpu, "OUT", 0);
+			cpu->pc += 2;
+			break;
 		case 0xd5: // push d 
 			_debug_instruction(cpu, "PUSH D", 0);
 			_push(cpu, &cpu->d, 1);
 			_push(cpu, &cpu->e, 1);
 			cpu->pc++;
 			break;
+		case 0xe1: // pop h
+			_debug_instruction(cpu, "POP H", 0);
+			{
+				uint8_t *addr = _pop(cpu, 2);
+				cpu->h = addr[1];
+				cpu->l = addr[0];
+				cpu->pc++;
+			}
+			break;
 		case 0xe5: // push h
 			_debug_instruction(cpu, "PUSH H", 0);
 			_push(cpu, &cpu->h, 1);
 			_push(cpu, &cpu->l, 1);
 			cpu->pc++;
+			break;
+		case 0xeb: // xchg
+			_debug_instruction(cpu, "XCHG", 0);
+			{
+				uint8_t thi = cpu->h;
+				uint8_t tlo = cpu->l;
+				cpu->h = cpu->d;
+				cpu->l = cpu->e;
+				cpu->d = thi;
+				cpu->e = tlo;
+				cpu->pc++;
+			}
 			break;
 		case 0xfe: // cpi
 			_debug_instruction(cpu, "CPI", 1);

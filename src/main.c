@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 	uint8_t *rom_data;
 	uint32_t size = load(argv[1], &rom_data);
 	if (rom_data == NULL && size != 0x4000) {
-		printf("Unable to load the file: %s", argv[1]);
+		printf("Unable to load the file: %s\n", argv[1]);
 		exit(1);
 	} else {
 		printf("Loaded rom '%s' (%i bytes)\n", argv[1], size);

@@ -10,8 +10,9 @@ extern uint8_t test_instruction_out(uint8_t opcode, BloomCPU *cpu) {
 	cpu_initialize_rom(cpu, rom, 1, 0);
 
 	uint8_t result = cpu_step(cpu);
-	assert_uint_eq(1, result);
+	assert_uint_eq(0, result);
+	assert_uint_eq(2, cpu->pc);
 
-return 0;
+	return 0;
 }
 
