@@ -9,7 +9,7 @@ typedef struct ConditionFlags {
 	uint8_t s;
 	uint8_t p;
 	uint8_t c;
-	//uint8_t ac;
+	uint8_t a;
 } ConditionFlags;
 
 typedef struct BloomCPU {

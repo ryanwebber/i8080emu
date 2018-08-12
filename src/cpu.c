@@ -12,8 +12,7 @@ void _debug_instruction(BloomCPU*, const char*, uint8_t);
 void _push(BloomCPU*, uint8_t*, uint16_t);
 uint8_t* _pop(BloomCPU*, uint8_t);
 
-uint8_t _read_hl(BloomCPU*);
-uint8_t _read_de(BloomCPU*);
+uint8_t* _read_mem(BloomCPU*, uint8_t hi, uint8_t lo);
 uint8_t _write_mem(BloomCPU*, uint8_t);
 
 int i = 0;
@@ -24,6 +23,7 @@ ConditionFlags* cf_create() {
 	cf->s = 0;
 	cf->p = 0;
 	cf->c = 0;
+	cf->a = 0;
 
 	return cf;
 }
@@ -142,6 +142,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->c = opcode[1];
 			cpu->pc += 2;
 			break;
+		case 0x0f: // rrc
+			_debug_instruction(cpu, "RRC", 0);
+			cpu->a = ((cpu->a & 0x01) << 7) | (cpu->a >> 1);
+			cpu->flags->c = (cpu->a & 0x80) >> 7;
+			cpu->pc++;
+			break;
 		case 0x11: // lxi d
 			_debug_instruction(cpu, "LXI D", 2);
 			cpu->d = opcode[2];
@@ -175,7 +181,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x1a: // ldax d
 			_debug_instruction(cpu, "LDAX D", 0);
-			cpu->a = _read_de(cpu);
+			cpu->a = _read_mem(cpu, cpu->d, cpu->e)[0];
 			cpu->pc++;
 			break;
 		case 0x1b: // dcx d
@@ -245,12 +251,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x4e: // mov c,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
-			cpu->c = _read_hl(cpu);
+			cpu->c = _read_mem(cpu, cpu->h, cpu->l)[0];
 			cpu->pc++;
 			break;
 		case 0x56: // mov d,m
 			_debug_instruction(cpu, "MOV D<-M", 0);
-			cpu->d = _read_hl(cpu);
+			cpu->d = _read_mem(cpu, cpu->h, cpu->l)[0];
 			cpu->pc++;
 			break;
 		case 0x58: // mov e,b
@@ -260,7 +266,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x5e: // mov e,m
 			_debug_instruction(cpu, "MOV E<-M", 0);
-			cpu->e = _read_hl(cpu);
+			cpu->e = _read_mem(cpu, cpu->h, cpu->l)[0];
+			cpu->pc++;
+			break;
+		case 0x66: // mov h,m
+			cpu->h = _read_mem(cpu, cpu->h, cpu->l)[0];
 			cpu->pc++;
 			break;
 		case 0x6f: // mov l,a
@@ -273,6 +283,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->pc++;
 			result = _write_mem(cpu, cpu->a);
 			break;
+		case 0x7a: // mov a,d
+			_debug_instruction(cpu, "MOV A<-D", 0);
+			cpu->a = cpu->d;
+			cpu->pc++;
+			break;
 		case 0x7C: // mov a,h
 			_debug_instruction(cpu, "MOV A<-H", 0);
 			cpu->a = cpu->h;
@@ -280,7 +295,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x7e: // mov a,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
-			cpu->a = _read_hl(cpu);
+			cpu->a = _read_mem(cpu, cpu->h, cpu->l)[0];
 			cpu->pc++;
 			break;
 		case 0xc1: // pop b
@@ -359,6 +374,13 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_push(cpu, &cpu->l, 1);
 			cpu->pc++;
 			break;
+		case 0xe6: // ani
+			_debug_instruction(cpu, "ANI", 1);
+			cpu->a = cpu->a & opcode[1];
+			cpu->flags->c = 0;
+			_update_flags(cpu, cpu->a);
+			cpu->pc += 2;
+			break;
 		case 0xeb: // xchg
 			_debug_instruction(cpu, "XCHG", 0);
 			{
@@ -368,6 +390,20 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->l = cpu->e;
 				cpu->d = thi;
 				cpu->e = tlo;
+				cpu->pc++;
+			}
+			break;
+		case 0xf5: // push psw
+			_debug_instruction(cpu, "PUSH PSW", 0);
+			{
+				uint8_t flags = 0x00;
+				flags |= (cpu->flags->z & 0x1) << 0;
+				flags |= (cpu->flags->s & 0x1) << 1;
+				flags |= (cpu->flags->p & 0x1) << 2;
+				flags |= (cpu->flags->c & 0x1) << 3;
+				flags |= (cpu->flags->a & 0x1) << 4;
+				_push(cpu, &cpu->a, 1);
+				_push(cpu, &flags, 1);
 				cpu->pc++;
 			}
 			break;
@@ -433,12 +469,8 @@ uint8_t* _pop(BloomCPU* cpu, uint8_t len) {
 	return addr;
 }
 
-uint8_t _read_hl(BloomCPU* cpu) {
-	return cpu->memory[cpu->h << 8 | cpu->l];
-}
-
-uint8_t _read_de(BloomCPU* cpu) {
-	return cpu->memory[cpu->d << 8 | cpu->e];
+uint8_t* _read_mem(BloomCPU* cpu, uint8_t hi_addr, uint8_t lo_addr) {
+	return cpu->memory + (hi_addr << 8 | lo_addr);
 }
 
 uint8_t _write_mem(BloomCPU* cpu, uint8_t val) {
