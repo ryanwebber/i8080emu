@@ -6,6 +6,7 @@
 
 uint8_t _step(BloomCPU*);
 
+void _update_flags(BloomCPU* cpu, uint8_t val);
 void _unsupported_opcode(BloomCPU*, uint8_t);
 void _debug_instruction(BloomCPU*, const char*, uint8_t);
 
@@ -37,6 +38,8 @@ BloomCPU* cpu_create() {
 	ConditionFlags *cf = cf_create();
 	
 	BloomCPU* cpu = malloc(sizeof(BloomCPU));
+	
+	cpu->cycles = 0;
 	cpu->int_enabled = 1;
 	cpu->sp = 0;
 	cpu->pc = 0;
@@ -81,6 +84,17 @@ uint8_t cpu_initialize_rwm(BloomCPU *cpu, void* rom_memory, uint16_t mem_lo, uin
 	cpu->mem_hi = mem_hi;
 	
 	return 0;
+}
+
+uint8_t cpu_interrupt(BloomCPU *cpu, uint8_t interrupt) {
+	_push(cpu, (uint8_t*) &cpu->pc, 2);
+	cpu->pc = 8 * interrupt;
+	cpu->int_enabled = 0;
+	return 0;
+}
+
+void *cpu_framebuffer(BloomCPU *cpu) {
+	return cpu->memory + 0x2400;
 }
 
 uint8_t cpu_start(BloomCPU* cpu) {

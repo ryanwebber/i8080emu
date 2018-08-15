@@ -2,6 +2,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(LIB_SOURCES
   cpu.c
+  machine.c
 )
 
 set(MAIN_SOURCES
@@ -12,12 +13,12 @@ set(MAIN_SOURCES
 
 set(LIB_HEADERS
   ${CONFIG_HEADER}
-  cpu.h
+  bloom.h
 )
 
 set(MAIN_HEADERS
-	${LIB_HEADERS}
-  	loader.h
+  ${CONFIG_HEADER}
+  loader.h
 )
 
 add_library(bloom STATIC ${LIB_SOURCES} ${LIB_HEADERS})

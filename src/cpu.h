@@ -13,6 +13,9 @@ typedef struct ConditionFlags {
 } ConditionFlags;
 
 typedef struct BloomCPU {
+	
+	uint64_t cycles;
+
 	uint8_t int_enabled;
 	uint16_t sp;
 	uint16_t pc;
@@ -38,13 +41,9 @@ uint8_t   cpu_initialize_rom(BloomCPU*, void* rom_memory, size_t len, uint16_t p
 uint8_t   cpu_initialize_rwm(BloomCPU*, void* rom_memory, uint16_t mem_lo, uint16_t mem_hi, uint16_t pc);
 uint8_t   cpu_start(BloomCPU*);
 uint8_t   cpu_step(BloomCPU*);
+uint8_t   cpu_interrupt(BloomCPU*, uint8_t interrupt);
+void*     cpu_framebuffer(BloomCPU*);
 void      cpu_destroy(BloomCPU*);
-
-/* helpers */
-uint16_t cpu_mem_get_addr(BloomCPU* cpu, uint16_t offset);
-
-/* visible for testing */
-void _update_flags(BloomCPU* cpu, uint8_t val);
 
 #endif
 
