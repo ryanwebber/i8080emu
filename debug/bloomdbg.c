@@ -84,7 +84,7 @@ void print_states(State8080 *cs, BloomCPU *ts) {
 	printf("\t}\n");
 	printf("}\n\n");
 }
-void print_difference(uint8_t inst, const const char* prefix, const char* format, uint16_t expected, uint16_t real) {
+void print_difference(uint8_t inst, const char* prefix, const char* format, uint16_t expected, uint16_t real) {
 	printf("\nAssertion failed for instruction 0x%02X:\n", inst);
 	printf("\t[EXPECTED] %s = ", prefix);
 	printf(format, expected);

@@ -53,7 +53,7 @@ typedef void* BloomDelegateRef;
 
 /* Functions that will be used in the delegate */
 typedef uint64_t (*FnGetTime)(BloomDelegateRef);
-typedef uint8_t (*FnHardwareIn)(BloomDelegateRef, uint8_t port);
+typedef uint8_t (*FnHardwareIn)(BloomDelegateRef, uint8_t port, uint8_t *a);
 typedef uint8_t (*FnHardwareOut)(BloomDelegateRef, uint8_t port, uint8_t val);
 
 /* A delegate to call back to a native implementation */
@@ -65,7 +65,7 @@ typedef struct BloomMachineDelegate {
 	BloomDelegateRef ref;
 } BloomMachineDelegate;
 
-BloomMachine *machine_create(BloomMachineDelegate*);
+BloomMachine *machine_create(BloomMachineDelegate*, BloomCPU *cpu);
 void machine_start(BloomMachine*);
 void machine_stop(BloomMachine*);
 void machine_destroy(BloomMachine*);

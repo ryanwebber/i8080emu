@@ -18,9 +18,9 @@ struct BloomMachine {
 
 /** API Implementation **/
 
-BloomMachine *machine_create(BloomMachineDelegate *delegate) {
+BloomMachine *machine_create(BloomMachineDelegate *delegate, BloomCPU *cpu) {
 	BloomMachine *machine = malloc(sizeof(BloomMachine));
-	machine->cpu = cpu_create();
+	machine->cpu = cpu;
 	machine->delegate = delegate;
 	machine->state = STATE_STOPPED;
 
@@ -30,6 +30,8 @@ BloomMachine *machine_create(BloomMachineDelegate *delegate) {
 void machine_start(BloomMachine *machine) {
 	machine->state = STATE_STARTED;
 	BloomDelegateRef ref = machine->delegate->ref;
+
+    printf("Starting machine execution!\n");
 
 	uint64_t now;
 	uint64_t last_cycle = machine->delegate->get_time(ref);
@@ -54,7 +56,7 @@ void machine_start(BloomMachine *machine) {
 			uint8_t result = 0;
 			switch (*opcode) {
 				case 0xdb: // IN
-					result = machine->delegate->data_in(ref, opcode[1]);
+					result = machine->delegate->data_in(ref, opcode[1], &machine->cpu->a);
 					machine->cpu->pc += 2;
 					machine->cpu->cycles += 3;
 				case 0xd3: // OUT
@@ -81,7 +83,6 @@ void machine_stop(BloomMachine *machine) {
 }
 
 void machine_destroy(BloomMachine *machine) {
-	free(machine->cpu);
 	free(machine);
 }
 
