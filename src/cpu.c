@@ -423,6 +423,15 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc = (opcode[2] << 8 | opcode[1]);
 			}
 			break;
+		case 0xc8: // rz
+			_debug_instruction(cpu, "RZ", 0);
+			if (cpu->flags->z == 1) {
+				uint8_t *addr = _pop(cpu, 2);
+				cpu->pc = (addr[1] << 8 | addr[0]);
+			} else {
+				cpu->pc++;
+			}
+			break;
 		case 0xc9: // ret
 			_debug_instruction(cpu, "RET", 0);
 			{

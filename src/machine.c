@@ -43,7 +43,7 @@ void machine_start(BloomMachine *machine) {
 		now = machine->delegate->get_time(ref);
 
 		if (machine->cpu->int_enabled && now > next_interrupt) {
-			printf("--- Generating interrupt (interrupt=%d)\n", interrupt);
+			printf("--- Generating interrupt (interrupt=%d)\n", interrupt + 1);
 			cpu_interrupt(machine->cpu, interrupt + 1);
 			interrupt = (interrupt + 1) % 2;
 			next_interrupt = now + 8000;
