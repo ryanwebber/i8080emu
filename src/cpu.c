@@ -16,7 +16,27 @@ uint8_t* _pop(BloomCPU*, uint8_t);
 uint8_t* _read_mem(BloomCPU*, uint8_t hi, uint8_t lo);
 uint8_t _write_mem(BloomCPU*, uint8_t);
 
-int i = 0;
+unsigned char cycleCounts[] = {
+	4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4,
+	4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4,
+	4, 10, 16, 5, 5, 5, 7, 4, 4, 10, 16, 5, 5, 5, 7, 4,
+	4, 10, 13, 5, 10, 10, 10, 4, 4, 10, 13, 5, 5, 5, 7, 4,
+	
+	5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+	5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+	5, 5, 5, 5, 5, 5, 7, 5, 5, 5, 5, 5, 5, 5, 7, 5,
+	7, 7, 7, 7, 7, 7, 7, 7, 5, 5, 5, 5, 5, 5, 7, 5,
+	
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	4, 4, 4, 4, 4, 4, 7, 4, 4, 4, 4, 4, 4, 4, 7, 4,
+	
+	11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11,
+	11, 10, 10, 10, 17, 11, 7, 11, 11, 10, 10, 10, 10, 17, 7, 11,
+	11, 10, 10, 18, 17, 11, 7, 11, 11, 5, 10, 5, 17, 17, 7, 11,
+	11, 10, 10, 4, 17, 11, 7, 11, 11, 5, 10, 4, 17, 17, 7, 11,
+};
 
 ConditionFlags* cf_create() {
 	ConditionFlags* cf = malloc(sizeof(ConditionFlags));
@@ -106,7 +126,7 @@ uint8_t cpu_start(BloomCPU* cpu) {
 		}
 	}
 
-	printf("\nAborting cpu processing ($pc = 0x%04X, cycles = %i)...\n", cpu->pc, i);
+	printf("\nAborting cpu processing ($pc = 0x%04X)...\n", cpu->pc);
 	return 0;
 }
 
@@ -377,6 +397,14 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				_update_flags(cpu, cpu->a);
 			}
 			break;
+		case 0xca: // jz
+			_debug_instruction(cpu, "JZ", 2);
+			if (cpu->flags->z == 1) {
+				cpu->pc = (opcode[2] << 8) | opcode[1];
+			} else {
+				cpu->pc += 3;
+			}
+			break;
 		case 0xcd: // call
 			_debug_instruction(cpu, "CALL", 2);
 			{
@@ -489,7 +517,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			result = 1;
 	}
 
-	i++;
+	cpu->cycles += cycleCounts[*opcode];
 	return result;
 }
 

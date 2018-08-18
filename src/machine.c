@@ -31,7 +31,7 @@ void machine_start(BloomMachine *machine) {
 	machine->state = STATE_STARTED;
 	BloomDelegateRef ref = machine->delegate->ref;
 
-    printf("Starting machine execution!\n");
+	printf("Starting machine execution!\n");
 
 	uint64_t now;
 	uint64_t last_cycle = machine->delegate->get_time(ref);
@@ -43,6 +43,7 @@ void machine_start(BloomMachine *machine) {
 		now = machine->delegate->get_time(ref);
 
 		if (machine->cpu->int_enabled && now > next_interrupt) {
+			printf("\nGenerating interrupt (interrupt=%d)\n", interrupt);
 			cpu_interrupt(machine->cpu, interrupt + 1);
 			interrupt = (interrupt + 1) % 2;
 			next_interrupt = now + 8000;
@@ -51,6 +52,7 @@ void machine_start(BloomMachine *machine) {
 		/* at 2MZHz, we do 2 cycles per microsecond */
 		uint64_t elapsed = now - last_cycle;
 		uint64_t run_until = machine->cpu->cycles + (elapsed * 2);
+		printf("\nRunning batch of %llu cycles\n\n", run_until);
 		while (machine->cpu->cycles < run_until) {
 			uint8_t *opcode = machine->cpu->memory + machine->cpu->pc;
 			uint8_t result = 0;
