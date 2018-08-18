@@ -280,6 +280,15 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->memory[opcode[2] << 8 | opcode[1]] = cpu->a;
 			cpu->pc += 3;
 			break;
+		case 0x35: // dcr m
+			_debug_instruction(cpu, "DCR M", 0);
+			{
+				uint8_t val = _read_mem(cpu, cpu->h, cpu->l)[0] - 1;
+				_write_mem(cpu, val);
+				_update_flags(cpu, val);
+				cpu->pc++;
+			}
+			break;
 		case 0x36: // mvi m
 			_debug_instruction(cpu, "MVI M", 1);
 			cpu->pc += 2;
@@ -296,7 +305,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->pc += 2;
 			break;
 		case 0x4e: // mov c,m
-			_debug_instruction(cpu, "MOV A<-M", 0);
+			_debug_instruction(cpu, "MOV C<-M", 0);
 			cpu->c = _read_mem(cpu, cpu->h, cpu->l)[0];
 			cpu->pc++;
 			break;
