@@ -14,6 +14,5 @@ extern uint8_t test_instruction_dcr_b(uint8_t opcode, BloomCPU *cpu) {
 	assert_uint_eq(0, result);
 	assert_uint_eq(0x98, cpu->b);
 
-return 0;
+	return 0;
 }
-

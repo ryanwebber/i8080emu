@@ -299,6 +299,12 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->a = _read_mem(cpu, opcode[2], opcode[1])[0];
 			cpu->pc += 3;
 			break;
+		case 0x3d: // dcr a
+			_debug_instruction(cpu, "DCR A", 0);
+			cpu->a -= 1;
+			cpu->pc++;
+			_update_flags(cpu, cpu->a);
+			break;
 		case 0x3e: // mvi a
 			_debug_instruction(cpu, "MVI A", 1);
 			cpu->a = opcode[1];
