@@ -480,6 +480,14 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_push(cpu, &cpu->e, 1);
 			cpu->pc++;
 			break;
+		case 0xda: // jc
+			_debug_instruction(cpu, "JC", 2);
+			if (cpu->flags->c == 1) {
+				cpu->pc = (opcode[2] << 8) | opcode[1];
+			} else {
+				cpu->pc += 3;
+			}
+			break;
 		case 0xe1: // pop h
 			_debug_instruction(cpu, "POP H", 0);
 			{
