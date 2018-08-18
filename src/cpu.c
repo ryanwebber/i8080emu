@@ -7,6 +7,8 @@
 uint8_t _step(BloomCPU*);
 
 void _update_flags(BloomCPU* cpu, uint8_t val);
+uint8_t _update_carry_8(BloomCPU* cpu, uint16_t val);
+uint16_t _update_carry_16(BloomCPU* cpu, uint32_t val);
 void _unsupported_opcode(BloomCPU*, uint8_t);
 void _debug_instruction(BloomCPU*, const char*, uint8_t);
 
@@ -159,9 +161,9 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "DAD B", 0);
 			{
 				uint32_t num = (cpu->b << 8 | cpu->c) + (cpu->h << 8 | cpu -> l);
+				_update_carry_16(cpu, num);
 				cpu->h = (num & 0x0000FF00) >> 8;
 				cpu->l = (num & 0x000000FF);
-				cpu->flags->c = num > 0x0000FFFF;
 				cpu->pc++;
 			}
 			break;
@@ -207,9 +209,9 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "DAD D", 0);
 			{
 				uint32_t num = (cpu->d << 8 | cpu->e) + (cpu->h << 8 | cpu -> l);
+				_update_carry_16(cpu, num);
 				cpu->h = (num & 0x0000FF00) >> 8;
 				cpu->l = (num & 0x000000FF);
-				cpu->flags->c = num > 0x0000FFFF;
 				cpu->pc++;
 			}
 			break;
@@ -391,8 +393,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "ADI", 1);
 			{
 				uint16_t val = cpu->a + opcode[1];
-				cpu->a = val & 0xFF;
-				cpu->flags->c = val > 0xFF;
+				cpu->a = _update_carry_8(cpu, val);
 				cpu->pc += 2;
 				_update_flags(cpu, cpu->a);
 			}
@@ -427,6 +428,14 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->d = addr[1];
 				cpu->e = addr[0];
 				cpu->pc++;
+			}
+			break;
+		case 0xd2: // jnc
+			_debug_instruction(cpu, "JNC", 2);
+			if (cpu->flags->c == 0) {
+				cpu->pc = (opcode[2] << 8) | opcode[1];
+			} else {
+				cpu->pc += 3;
 			}
 			break;
 		case 0xd3: // out
@@ -531,11 +540,13 @@ void _unsupported_opcode(BloomCPU* cpu, uint8_t opcode) {
 }
 
 void _debug_instruction(BloomCPU* cpu, const char* inst, uint8_t argc) {
+#ifdef DEBUG
 	printf("[0x%04X]    0x%02X %-16s ; ", cpu->pc, cpu->memory[cpu->pc], inst);
 	for (uint8_t i = 0; i < argc; i++) {
 		printf("0x%02X ", cpu->memory[cpu->pc + i + 1]);
 	}
 	printf("\n");
+#endif
 }
 
 uint8_t _parity(uint8_t val) {
@@ -544,6 +555,17 @@ uint8_t _parity(uint8_t val) {
 		c += (val >> i) & 0x01;
 	}
 	return c % 2 == 0;
+
+}
+
+uint8_t _update_carry_8(BloomCPU *cpu, uint16_t val) {
+	cpu->flags->c = val > 0xFF;
+	return val & 0xFF;
+}
+
+uint16_t _update_carry_16(BloomCPU *cpu, uint32_t val) {
+	cpu->flags->c = val > 0xFFFF;
+	return val & 0xFFFF;
 }
 
 void _update_flags(BloomCPU* cpu, uint8_t val) {

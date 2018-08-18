@@ -3,15 +3,22 @@
 #include "../../src/cpu.h"
 
 extern uint8_t test_instruction_jnc_adr(uint8_t opcode, BloomCPU *cpu) {
-	uint8_t rom[1] = {
-		opcode
+	uint8_t rom[6] = {
+		opcode, 0x00, 0x00, opcode, 0xFE, 0xFF
 	};
 
-	cpu_initialize_rom(cpu, rom, 1, 0);
+	cpu_initialize_rom(cpu, rom, 6, 0);
+	cpu->flags->c = 1;
 
 	uint8_t result = cpu_step(cpu);
-	assert_uint_eq(1, result);
+	assert_uint_eq(0, result);
+	assert_uint_eq(3, cpu->pc);
+	
+	cpu->flags->c = 0;
+	result = cpu_step(cpu);
+	assert_uint_eq(0, result);
+	assert_uint_eq(0xFFFE, cpu->pc);
 
-return 0;
+	return 0;
 }
 
