@@ -353,6 +353,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->a = cpu->h;
 			cpu->pc++;
 			break;
+		case 0x7d: // mov a,l
+			_debug_instruction(cpu, "MOV A<-L", 0);
+			cpu->a = cpu->l;
+			cpu->pc++;
+			break;
 		case 0x7e: // mov a,m
 			_debug_instruction(cpu, "MOV A<-M", 0);
 			cpu->a = _read_mem(cpu, cpu->h, cpu->l)[0];
