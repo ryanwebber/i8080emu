@@ -119,6 +119,10 @@ void *cpu_framebuffer(BloomCPU *cpu) {
 	return cpu->memory + 0x2400;
 }
 
+void cpu_reset_cycles(BloomCPU* cpu) {
+	cpu->cycles = 0;
+}
+
 uint8_t cpu_start(BloomCPU* cpu) {
 	uint8_t result;
 	while (1) {
@@ -332,6 +336,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			break;
 		case 0x66: // mov h,m
 			cpu->h = _read_mem(cpu, cpu->h, cpu->l)[0];
+			cpu->pc++;
+			break;
+		case 0x67: // mov h,a
+			_debug_instruction(cpu, "MOV H<-A", 0);
+			cpu->h = cpu->a;
 			cpu->pc++;
 			break;
 		case 0x6f: // mov l,a

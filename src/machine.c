@@ -50,9 +50,11 @@ void machine_start(BloomMachine *machine) {
 		}
 
 		/* at 2MZHz, we do 2 cycles per microsecond */
+		cpu_reset_cycles(machine->cpu);
 		uint64_t elapsed = now - last_cycle;
 		uint64_t run_until = machine->cpu->cycles + (elapsed * 2);
 		printf("--- Running batch of %llu cycles\n", run_until - machine->cpu->cycles);
+
 		while (machine->cpu->cycles < run_until) {
 			uint8_t *opcode = machine->cpu->memory + machine->cpu->pc;
 			uint8_t result = 0;
@@ -75,8 +77,8 @@ void machine_start(BloomMachine *machine) {
 			}
 		}
 
-		last_cycle = now;
 		usleep(1000L);
+		last_cycle = now;
 	}
 }
 

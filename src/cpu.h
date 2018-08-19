@@ -43,6 +43,7 @@ uint8_t   cpu_start(BloomCPU*);
 uint8_t   cpu_step(BloomCPU*);
 uint8_t   cpu_interrupt(BloomCPU*, uint8_t interrupt);
 void*     cpu_framebuffer(BloomCPU*);
+void      cpu_reset_cycles(BloomCPU*);
 void      cpu_destroy(BloomCPU*);
 
 #endif
