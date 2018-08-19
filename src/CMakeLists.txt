@@ -22,9 +22,10 @@ set(MAIN_HEADERS
 )
 
 add_library(bloom STATIC ${LIB_SOURCES} ${LIB_HEADERS})
+  target_compile_definitions(bloom PRIVATE BLOOM_DEBUG=1)
 
 add_executable(main ${MAIN_HEADERS} ${MAIN_SOURCES})
-target_link_libraries(main bloom)
+  target_link_libraries(main bloom)
 
 install(TARGETS bloom
   RUNTIME DESTINATION bin

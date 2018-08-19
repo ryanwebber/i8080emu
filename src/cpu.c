@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <string.h>
 
+struct BloomDebug {
+	BloomCPU *clone;
+};
+
 uint8_t _step(BloomCPU*);
 
 void _update_flags(BloomCPU* cpu, uint8_t val);
@@ -17,6 +21,9 @@ uint8_t* _pop(BloomCPU*, uint8_t);
 
 uint8_t* _read_mem(BloomCPU*, uint8_t hi, uint8_t lo);
 uint8_t _write_mem(BloomCPU*, uint8_t);
+
+void _pre_step(BloomCPU *cpu, uint8_t opcode);
+void _post_step(BloomCPU *cpu, uint8_t opcode);
 
 unsigned char cycleCounts[] = {
 	4, 10, 7, 5, 5, 5, 7, 4, 4, 10, 7, 5, 5, 5, 7, 4,
@@ -79,6 +86,10 @@ BloomCPU* cpu_create() {
 	cpu->h = 0;
 	cpu->l = 0;
 
+	/* debugging info */
+	cpu->debug = malloc(sizeof(BloomDebug));
+	cpu->debug->clone = malloc(sizeof(BloomCPU));
+
 	return cpu;
 }
 
@@ -109,7 +120,10 @@ uint8_t cpu_initialize_rwm(BloomCPU *cpu, void* rom_memory, uint16_t mem_lo, uin
 }
 
 uint8_t cpu_interrupt(BloomCPU *cpu, uint8_t interrupt) {
-	_push(cpu, (uint8_t*) &cpu->pc, 2);
+	uint16_t addr = cpu->pc;
+	_push(cpu, ((uint8_t*) &addr) + 1, 1);
+	_push(cpu, ((uint8_t*) &addr) + 0, 1);
+
 	cpu->pc = 8 * interrupt;
 	cpu->int_enabled = 0;
 	return 0;
@@ -139,6 +153,11 @@ uint8_t cpu_start(BloomCPU* cpu) {
 uint8_t cpu_step(BloomCPU* cpu) {
 	uint8_t *opcode = &cpu->memory[cpu->pc];
 	uint8_t result = 0;
+
+#ifdef BLOOM_DEBUG
+	_pre_step(cpu, *opcode);
+#endif
+
 	switch(*opcode) {
 		case 0x00: // nop 
 			_debug_instruction(cpu, "NOP", 0);
@@ -194,6 +213,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->e = opcode[1];
 			cpu->pc += 3;
 			break;
+		case 0x12: // stax d
+			_debug_instruction(cpu, "STAX D", 0);
+			cpu->memory[(cpu->d << 8) | cpu->e] = cpu->a;
+			cpu->pc++;
+			break;
 		case 0x13: // inx d
 			_debug_instruction(cpu, "INX D", 0);
 			{
@@ -233,6 +257,11 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc++;
 			}
 			break;
+		case 0x1e: // mvi e
+			_debug_instruction(cpu, "MVI E", 1);
+			cpu->e = opcode[1];
+			cpu->pc += 2;
+			break;
 		case 0x20: // rim
 			_debug_instruction(cpu, "RIM", 0);
 			/* Serial instruction, ignore */
@@ -263,6 +292,20 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "MVI_H", 1);
 			cpu->h = opcode[1];
 			cpu->pc += 2;
+			break;
+		case 0x27: // daa
+			_debug_instruction(cpu, "DAA", 0);
+			if ((cpu->a & 0xf) > 0x09) {
+				cpu->a += 0x06;
+			}
+			
+			if ((cpu->a & 0xF0) > 0x90) {
+				uint16_t val = (uint16_t) cpu->a + 0x60;
+				cpu->a = val & 0xFF;
+				_update_flags(cpu, cpu->a);
+			}
+
+			cpu->pc++;
 			break;
 		case 0x29: // dad h
 			_debug_instruction(cpu, "DAD H", 0);
@@ -335,6 +378,7 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->pc++;
 			break;
 		case 0x66: // mov h,m
+			_debug_instruction(cpu, "MOV H<-M", 0);
 			cpu->h = _read_mem(cpu, cpu->h, cpu->l)[0];
 			cpu->pc++;
 			break;
@@ -388,8 +432,8 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			_debug_instruction(cpu, "XRA A", 0);
 			cpu->a = 0;
 			cpu->flags->c = 0;
-			_update_flags(cpu, cpu->a);
 			cpu->pc++;
+			_update_flags(cpu, cpu->a);
 			break;
 		case 0xc0: // rnz
 			_debug_instruction(cpu, "RZ", 0);
@@ -436,22 +480,6 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				_update_flags(cpu, cpu->a);
 			}
 			break;
-		case 0xca: // jz
-			_debug_instruction(cpu, "JZ", 2);
-			if (cpu->flags->z == 1) {
-				cpu->pc = (opcode[2] << 8) | opcode[1];
-			} else {
-				cpu->pc += 3;
-			}
-			break;
-		case 0xcd: // call
-			_debug_instruction(cpu, "CALL", 2);
-			{
-				uint16_t addr = cpu->pc + 3;
-				_push(cpu, (uint8_t*) &addr, 2);
-				cpu->pc = (opcode[2] << 8 | opcode[1]);
-			}
-			break;
 		case 0xc8: // rz
 			_debug_instruction(cpu, "RZ", 0);
 			if (cpu->flags->z == 1) {
@@ -466,6 +494,23 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			{
 				uint8_t *addr = _pop(cpu, 2);
 				cpu->pc = (addr[1] << 8 | addr[0]);
+			}
+			break;
+		case 0xca: // jz
+			_debug_instruction(cpu, "JZ", 2);
+			if (cpu->flags->z == 1) {
+				cpu->pc = (opcode[2] << 8) | opcode[1];
+			} else {
+				cpu->pc += 3;
+			}
+			break;
+		case 0xcd: // call
+			_debug_instruction(cpu, "CALL", 2);
+			{
+				uint16_t addr = cpu->pc + 3;
+				_push(cpu, ((uint8_t*) &addr) + 1, 1);
+				_push(cpu, ((uint8_t*) &addr) + 0, 1);
+				cpu->pc = (opcode[2] << 8 | opcode[1]);
 			}
 			break;
 		case 0xd1: // pop d
@@ -565,6 +610,15 @@ uint8_t cpu_step(BloomCPU* cpu) {
 				cpu->pc++;
 			}
 			break;
+		case 0xf8: // rm
+			_debug_instruction(cpu, "RM", 0);
+			if (cpu->flags->s != 0) {
+				uint8_t *addr = _pop(cpu, 2);
+				cpu->pc = (addr[1] << 8 | addr[0]);
+			} else {
+				cpu->pc++;
+			}
+			break;
 		case 0xfb: // ei
 			_debug_instruction(cpu, "EI", 0);
 			cpu->int_enabled = 1;
@@ -576,10 +630,23 @@ uint8_t cpu_step(BloomCPU* cpu) {
 			cpu->flags->c = opcode[1] > cpu->a;
 			cpu->pc += 2;
 			break;
+		case 0xff: // rst 7
+			_debug_instruction(cpu, "RST 7", 0);
+			{
+				uint16_t addr = cpu->pc + 3;
+				_push(cpu, ((uint8_t*) &addr) + 1, 1);
+				_push(cpu, ((uint8_t*) &addr) + 0, 1);
+				cpu->pc = 0x38;
+			}
+			break;
 		default:
 			_unsupported_opcode(cpu, *opcode);
 			result = 1;
 	}
+
+#ifdef BLOOM_DEBUG
+	_post_step(cpu, *opcode);
+#endif
 
 	cpu->cycles += cycleCounts[*opcode];
 	return result;
@@ -587,6 +654,8 @@ uint8_t cpu_step(BloomCPU* cpu) {
 
 void cpu_destroy(BloomCPU* cpu) {
 	cf_destroy(cpu->flags);
+	free(cpu->debug->clone);
+	free(cpu->debug);
 	free(cpu);
 }
 
@@ -595,7 +664,7 @@ void _unsupported_opcode(BloomCPU* cpu, uint8_t opcode) {
 }
 
 void _debug_instruction(BloomCPU* cpu, const char* inst, uint8_t argc) {
-#ifdef DEBUG
+#ifdef BLOOM_PRINT
 	printf("[0x%04X]    0x%02X %-16s ; ", cpu->pc, cpu->memory[cpu->pc], inst);
 	for (uint8_t i = 0; i < argc; i++) {
 		printf("0x%02X ", cpu->memory[cpu->pc + i + 1]);
@@ -661,3 +730,16 @@ uint8_t _write_mem(BloomCPU* cpu, uint8_t val) {
 	return 0;
 }
 
+void _pre_step(BloomCPU *cpu, uint8_t opcode) {
+	memcpy(cpu->debug->clone, cpu, sizeof(BloomCPU));
+}
+
+/* Do post-step validation */
+void _post_step(BloomCPU *cpu, uint8_t opcode) {
+	BloomCPU *ref = cpu->debug->clone;
+	
+	if (abs(ref->sp - cpu->sp) > 0x02 && opcode != 0x31) {
+		/* The stack pointer moved more than 2 bytes in 1 instruction */
+		printf("WARNING - the stack pointer moved more than 2 bytes (opcode=0x%02X, prev=0x%04X, new=0x%04X)\n", opcode, ref->sp, cpu->sp);
+	}
+}

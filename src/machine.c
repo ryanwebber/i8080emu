@@ -43,7 +43,7 @@ void machine_start(BloomMachine *machine) {
 		now = machine->delegate->get_time(ref);
 
 		if (machine->cpu->int_enabled && now > next_interrupt) {
-			printf("--- Generating interrupt (interrupt=%d)\n", interrupt + 1);
+			//("--- Generating interrupt (interrupt=%d)\n", interrupt + 1);
 			cpu_interrupt(machine->cpu, interrupt + 1);
 			interrupt = (interrupt + 1) % 2;
 			next_interrupt = now + 8000;
@@ -53,7 +53,7 @@ void machine_start(BloomMachine *machine) {
 		cpu_reset_cycles(machine->cpu);
 		uint64_t elapsed = now - last_cycle;
 		uint64_t run_until = machine->cpu->cycles + (elapsed * 2);
-		printf("--- Running batch of %llu cycles\n", run_until - machine->cpu->cycles);
+		//printf("--- Running batch of %llu cycles\n", run_until - machine->cpu->cycles);
 
 		while (machine->cpu->cycles < run_until) {
 			uint8_t *opcode = machine->cpu->memory + machine->cpu->pc;
@@ -64,7 +64,7 @@ void machine_start(BloomMachine *machine) {
 					machine->cpu->pc += 2;
 					machine->cpu->cycles += 3;
 				case 0xd3: // OUT
-					result = machine->delegate->data_out(ref, opcode[2], machine->cpu->a);
+					result = machine->delegate->data_out(ref, opcode[1], machine->cpu->a);
 					machine->cpu->pc += 2;
 					machine->cpu->cycles += 3;
 				default:

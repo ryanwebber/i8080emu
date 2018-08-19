@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+typedef struct BloomDebug BloomDebug;
+
 typedef struct ConditionFlags {
     uint8_t z;
 	uint8_t s;
@@ -34,6 +36,9 @@ typedef struct BloomCPU {
 	uint8_t e;
 	uint8_t h;
 	uint8_t l;
+
+	/* debugging */
+	BloomDebug *debug;
 } BloomCPU;
 
 BloomCPU* cpu_create(void);
